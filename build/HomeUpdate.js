@@ -1,24 +1,27 @@
 "use strict";
 exports.__esModule = true;
 exports.HomeUpdate = void 0;
+var reusable_1 = require("./reusable");
 var HomeUpdate = /** @class */ (function () {
-    function HomeUpdate(type, title, text, timestamp) {
+    function HomeUpdate(type, title, text, timestamp, expiry_date) {
         if (type > 0 && type < 4) {
             this.type = type;
         }
         else {
             throw "Type must be integer from 1 to 3.";
         }
-        this.title = title;
-        this.text = text;
+        this.title = (0, reusable_1.sanitize_string)(title);
+        this.text = (0, reusable_1.sanitize_string)(text);
         this.timestamp = timestamp;
+        this.expiry_date = expiry_date;
     }
     HomeUpdate.prototype.getJSON = function () {
         return {
             type: this.type,
             title: this.title,
             text: this.text,
-            timestamp: this.timestamp
+            timestamp: this.timestamp,
+            expiry_date: this.expiry_date
         };
     };
     HomeUpdate.toArray = function (updates) {
@@ -28,7 +31,7 @@ var HomeUpdate = /** @class */ (function () {
     };
     HomeUpdate.fromArray = function (updates) {
         return updates.map(function (update) {
-            return new HomeUpdate(update.type, update.title, update.text, update.timestamp);
+            return new HomeUpdate(update.type, update.title, update.text, update.timestamp, update.expiry_date);
         });
     };
     return HomeUpdate;

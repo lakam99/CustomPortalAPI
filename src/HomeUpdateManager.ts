@@ -5,9 +5,11 @@ import { HomeUpdate } from "./HomeUpdate";
 
 export class HomeUpdateManager {
     private cache: any;
-    private dbname: 'home-updates';
+    private dbname='home-updates';
     private portalAPI:ArkamPortalAPI;
     private calls:Array<ArkamAPICall>;
+    private expiryAccountant:any;
+    private expiryCheck=3600000; //ms
 
     constructor(apiInstance:ArkamPortalAPI) {
         this.portalAPI = apiInstance;
@@ -17,6 +19,8 @@ export class HomeUpdateManager {
             this.cache = {updates: []};
             this.writeDB();
         }
+
+        this.account_for_expired_updates();
 
         this.calls = [
             new ArkamAPICall(ARKAM_API_METHODS.get, '/home-update', (req,res)=>{this.get_updates_call(req, res)}),
@@ -42,6 +46,27 @@ export class HomeUpdateManager {
         ];
 
         this.portalAPI.registerAPICalls(this.calls);
+        this.expiryAccountant = setInterval(this.account_for_expired_updates, this.expiryCheck);
+    }
+
+    private async account_for_expired_updates() {
+        let updates = this.get_updates();
+        let now = new Date().getTime();
+        let del = [];
+        updates.forEach((update)=>{
+            if (new Date(update.expiry_date).getTime() <= now) {
+                del.push(update);
+            }
+        });
+
+        del.forEach((del_update)=>{
+            let i = updates.indexOf(del_update);
+            updates.splice(i, 1);
+        })
+
+        if (del.length) {
+            this.set_updates(HomeUpdate.fromArray(updates));
+        }
     }
 
     writeDB() {
@@ -68,6 +93,7 @@ export class HomeUpdateManager {
         }
         if (new_updates.updates) {
             this.set_updates(HomeUpdate.fromArray(new_updates.updates));
+            res.sendStatus(200);
         } else {
             res.sendStatus(400);
         }
