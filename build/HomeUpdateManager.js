@@ -62,7 +62,7 @@ var HomeUpdateManager = /** @class */ (function () {
             })
         ];
         this.portalAPI.registerAPICalls(this.calls);
-        this.expiryAccountant = setInterval(this.account_for_expired_updates, this.expiryCheck);
+        this.expiryAccountant = setInterval(function () { _this.account_for_expired_updates(); }, this.expiryCheck);
     }
     HomeUpdateManager.prototype.account_for_expired_updates = function () {
         return __awaiter(this, void 0, void 0, function () {

@@ -5,7 +5,7 @@ const eventManager = new EventEmitter();
 
 class DBManager {
     private cache: any;
-    private path = "D:/Admin/ArkamPortalAPI/databases/keytable.json";
+    private path = __dirname + "/../databases/keytable.json";
     private writing: boolean;
     private done_writing = 'writing-finished';
 

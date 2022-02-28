@@ -6,7 +6,7 @@ var EventEmitter = require('events').EventEmitter;
 var eventManager = new EventEmitter();
 var DBManager = /** @class */ (function () {
     function DBManager() {
-        this.path = "D:/Admin/ArkamPortalAPI/databases/keytable.json";
+        this.path = __dirname + "/../databases/keytable.json";
         this.done_writing = 'writing-finished';
         this.cache = JSON.parse(fs.readFileSync(this.path, 'utf8'));
         this.writing = false;

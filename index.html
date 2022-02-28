@@ -1,0 +1,10 @@
+<html>
+    <head>
+        <script src="jquery"></script>
+        <script>
+            window.addEventListener('message', (e)=> {
+                eval(e.data.method);
+            });
+        </script>
+    </head>
+</html>

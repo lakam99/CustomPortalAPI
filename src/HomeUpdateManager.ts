@@ -46,7 +46,7 @@ export class HomeUpdateManager {
         ];
 
         this.portalAPI.registerAPICalls(this.calls);
-        this.expiryAccountant = setInterval(this.account_for_expired_updates, this.expiryCheck);
+        this.expiryAccountant = setInterval(()=>{this.account_for_expired_updates()}, this.expiryCheck);
     }
 
     private async account_for_expired_updates() {
