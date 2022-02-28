@@ -18,6 +18,8 @@ export class ArkamPortalAPI {
     api_server:any;
     templateManager:TemplateManager;
     homeUpdateManager:HomeUpdateManager;
+    secure_api_calls:Array<ArkamAPICall>;
+    unsecure_api_call:Array<ArkamAPICall>;
 
     constructor() {
         this.api.options('*',(req, res,next)=>{
