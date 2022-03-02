@@ -40,6 +40,8 @@ exports.HomeUpdateManager = void 0;
 var ArkamAPICall_1 = require("./ArkamAPICall");
 var DBManager_1 = require("./DBManager");
 var HomeUpdate_1 = require("./HomeUpdate");
+var AuthenticatedUser_1 = require("./AuthenticatedUser");
+var path = require('path');
 var HomeUpdateManager = /** @class */ (function () {
     function HomeUpdateManager(apiInstance) {
         var _this = this;
@@ -54,16 +56,43 @@ var HomeUpdateManager = /** @class */ (function () {
             this.writeDB();
         }
         this.account_for_expired_updates();
-        this.calls = [
+        this.registerAuthenticatedUsers();
+        this.portalAPI.registerAPICalls(this.getAPICalls());
+        this.expiryAccountant = setInterval(function () { _this.account_for_expired_updates(); }, this.expiryCheck);
+    }
+    HomeUpdateManager.prototype.registerAuthenticatedUsers = function () {
+        var _this = this;
+        DBManager_1.primaryDB.readCache(path.resolve(__dirname + AuthenticatedUser_1.authUsersPath)).then(function (cache) {
+            var auth_users = JSON.parse(cache);
+            if (auth_users.HomeUpdates && Array.isArray(auth_users.HomeUpdates)) {
+                _this.authenticatedUsers = auth_users.HomeUpdates;
+            }
+            else {
+                throw "Unable to retrieve authenticated Home Updates users.";
+            }
+        });
+    };
+    HomeUpdateManager.prototype.is_user_authenticated = function (req_user) {
+        var users = this.authenticatedUsers;
+        for (var i = 0; i < users.length; i++) {
+            if (req_user.DomainName.toLowerCase() == users[i].domain.toLowerCase()
+                && req_user.UserName.toLowerCase() == users[i].username.toLowerCase()) {
+                return true;
+            }
+        }
+        return false;
+    };
+    HomeUpdateManager.prototype.getAPICalls = function () {
+        var _this = this;
+        return [
             new ArkamAPICall_1.ArkamAPICall(ArkamAPICall_1.ARKAM_API_METHODS.get, '/home-update', function (req, res) { _this.get_updates_call(req, res); }),
             new ArkamAPICall_1.ArkamAPICall(ArkamAPICall_1.ARKAM_API_METHODS.post, '/home-update/write', function (req, res) { _this.write_updates_call(req, res); }),
+            new ArkamAPICall_1.ArkamAPICall(ArkamAPICall_1.ARKAM_API_METHODS.get, '/auth-users', function (req, res) { res.sendFile(path.resolve(__dirname + "/../databases/auth-users.json")); }),
             new ArkamAPICall_1.ArkamAPICall(ArkamAPICall_1.ARKAM_API_METHODS.get, '/home-update/new-template', function (req, res) {
                 res.send("\n                <div class=\"col-sm-4\">\n                  <div class=\"accordion\" id='item-x'>\n                    <div class=\"accordion-item\">\n                      <h2 class=\"accordion-header\" id='itemx-h'>\n                          <p class='display-6 text-center'>New Update</p>\n                      </h2>\n                      <div id=\"itemx-b\" class=\"accordion-collapse collapse show\" data-bs-parent=\"#itemx\">\n                        <div class=\"accordion-body text-center\">\n                            &nbsp;\n                        </div>\n                      </div>\n                    </div>\n                  </div>\n                </div>\n                ");
             })
         ];
-        this.portalAPI.registerAPICalls(this.calls);
-        this.expiryAccountant = setInterval(function () { _this.account_for_expired_updates(); }, this.expiryCheck);
-    }
+    };
     HomeUpdateManager.prototype.account_for_expired_updates = function () {
         return __awaiter(this, void 0, void 0, function () {
             var updates, now, del;
@@ -101,16 +130,21 @@ var HomeUpdateManager = /** @class */ (function () {
         res.send("".concat(JSON.stringify(this.get_updates())));
     };
     HomeUpdateManager.prototype.write_updates_call = function (req, res) {
-        var new_updates = req.body;
-        if (new_updates.empty && new_updates.updates == undefined) {
-            new_updates.updates = [];
-        }
-        if (new_updates.updates) {
-            this.set_updates(HomeUpdate_1.HomeUpdate.fromArray(new_updates.updates));
-            res.sendStatus(200);
+        if (!this.is_user_authenticated(req.ntlm)) {
+            res.sendStatus(401);
         }
         else {
-            res.sendStatus(400);
+            var new_updates = req.body;
+            if (new_updates.empty && new_updates.updates == undefined) {
+                new_updates.updates = [];
+            }
+            if (new_updates.updates) {
+                this.set_updates(HomeUpdate_1.HomeUpdate.fromArray(new_updates.updates));
+                res.sendStatus(200);
+            }
+            else {
+                res.sendStatus(400);
+            }
         }
     };
     return HomeUpdateManager;

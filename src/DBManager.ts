@@ -14,6 +14,18 @@ class DBManager {
         this.writing = false;
     }
 
+    public readCache(path:string) {
+        return new Promise((resolve,reject)=>{
+            fs.readFile(path, 'utf8', (err, data)=>{
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(data);
+                }
+            });
+        })
+    }
+
     private writeToDB() {
         this.writing = true;
         fs.writeFile(this.path, JSON.stringify(this.cache), (err)=>{

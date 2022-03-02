@@ -1,10 +1,5 @@
 const express = require('express');
 var parser = require('body-parser');
-const cookieParser = require('cookie-parser');
-const cors = require('cors');
-var passport = require('passport');
-var session = require('express-session');
-var WindowsStrategy = require('passport-windowsauth');
 var path = require('path');
 var ntlm = require('express-ntlm');
 
@@ -23,92 +18,32 @@ export class ArkamPortalAPI {
 
     constructor() {
         this.api.options('*',(req, res,next)=>{
-            res.header("Access-Control-Allow-Origin", "http://ottansm2");
-            //res.header("Access-Control-Allow-Origin", "http://ottansm3");
-            res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept,__requestverificationtoken");
-            res.header("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
-            res.header("Access-Control-Allow-Credentials", "true");
+            res = ArkamPortalAPI.setHeaders(res);
             res.sendStatus(200);
         })
 
-        this.api.use(function(req, res, next) {
-            res.header("Access-Control-Allow-Origin", "http://ottansm2");
-            //res.header("Access-Control-Allow-Origin", "http://ottansm3");
-            res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept,__requestverificationtoken");
-            res.header("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
-            res.header("Access-Control-Allow-Credentials", "true");
+        this.api.use((req, res, next)=> {
+            res = ArkamPortalAPI.setHeaders(res);
             next();
         });
 
         this.api.use(parser.json());
         this.api.use(parser.urlencoded({ extended: true }));
-        /*this.api.use(cookieParser());
-        this.api.use(session());
-        this.api.use(passport.initialize());
-        this.api.use(passport.session())
+    
+        this.api.get('/index', (req, res)=>{res.sendFile(path.resolve(__dirname + "/../index.html"))});
+        this.api.get('/jquery', (req, res)=>{res.sendFile(path.resolve(__dirname + "/../jquery-3.6.0.min.js"))});
 
-        passport.use(new WindowsStrategy({
-            ldap: {
-              url:             'ldap://DEVDC3.nserc.ca',
-              base:            'OU=Dev_Users,DC=nserc,DC=ca',
-              bindDN:          'scsmAD',
-              bindCredentials: 'H0neyd3w'
-            }
-          },
-          (profile, done)=>{
-              console.log(profile);
-              done(0, profile);
-          }));
-
-          passport.serializeUser(function(user, done) {
-            done(null, user);
-          });
-          
-          passport.deserializeUser(function(user, done) {
-            done(null, user);
-          });*/
-
-          this.api.get('/index', (req, res)=>{res.sendFile(path.resolve(__dirname + "/../index.html"))});
-          this.api.get('/jquery', (req, res)=>{res.sendFile(path.resolve(__dirname + "/../jquery-3.6.0.min.js"))});
-
-          this.api.use(ntlm({
+        this.api.use(ntlm({
             debug: function() {
                 var args = Array.prototype.slice.apply(arguments);
                 console.log.apply(null, args);
             },
             domain: 'OU=Dev_Users,DC=nserc,DC=ca',
-            domaincontroller: 'ldap://DEVDC3.nserc.ca',
-        
-            // use different port (default: 389)
-            // domaincontroller: 'ldap://myad.example:3899',
+            domaincontroller: 'ldap://DEVDC3.nserc.ca'
         }));
 
-          /*this.api.options('*',(req,res)=>{
-            var sspi = require('node-sspi');
-            var sspiObj = new sspi({authoritative:false, offerBasic:true});
-            sspiObj.authenticate(req, res, function(err) {
-                console.log("Error:" + err);
-                res.finished;
-            })
-            cors({origin: "http://ottansm2", credentials: true, preflightContinue: true})
-          });
-        
-        this.api.use(function(req, res, next){
-            res.header("Access-Control-Allow-Origin", "http://ottansm2");
-            //res.header("Access-Control-Allow-Origin", "http://ottansm3");
-            res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept,__requestverificationtoken");
-            res.header("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
-            res.header("Access-Control-Allow-Credentials", "true");
-            var sspi = require('node-sspi');
-            var sspiObj = new sspi();
-            sspiObj.authenticate(req, res, function(err) {
-                console.log("Error:" + err);
-                res.finished || next();
-            })
-        });*/
-
         this.api.use(function(req, res, next) {
-            console.log("User: " + res.locals.ntlm);
+            console.log("User: " + res.locals.ntlm.UserName);
             next();
         });
 
@@ -119,8 +54,16 @@ export class ArkamPortalAPI {
             console.log("Listening at http://%s:%s", host, port);
         });
 
-        this.templateManager = new TemplateManager(this);
+        //this.templateManager = new TemplateManager(this);
         this.homeUpdateManager = new HomeUpdateManager(this);
+    }
+
+    static setHeaders(res) {
+        res.header("Access-Control-Allow-Origin", "*");
+        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept,__requestverificationtoken");
+        res.header("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+        res.header("Access-Control-Allow-Credentials", "true");
+        return res;
     }
 
     registerAPI(new_api:ArkamAPICall) {

@@ -2,6 +2,8 @@ import { ArkamAPICall, ARKAM_API_METHODS } from "./ArkamAPICall";
 import { ArkamPortalAPI } from "./ArkamPortalAPI";
 import { primaryDB } from "./DBManager";
 import { HomeUpdate } from "./HomeUpdate";
+import {AuthenticatedUser, authUsersPath} from "./AuthenticatedUser";
+var path = require('path');
 
 export class HomeUpdateManager {
     private cache: any;
@@ -10,6 +12,7 @@ export class HomeUpdateManager {
     private calls:Array<ArkamAPICall>;
     private expiryAccountant:any;
     private expiryCheck=3600000; //ms
+    private authenticatedUsers:Array<AuthenticatedUser>;
 
     constructor(apiInstance:ArkamPortalAPI) {
         this.portalAPI = apiInstance;
@@ -21,10 +24,38 @@ export class HomeUpdateManager {
         }
 
         this.account_for_expired_updates();
+        this.registerAuthenticatedUsers()
+        this.portalAPI.registerAPICalls(this.getAPICalls());
+        this.expiryAccountant = setInterval(()=>{this.account_for_expired_updates()}, this.expiryCheck);
+    }
 
-        this.calls = [
+    private registerAuthenticatedUsers() {
+        primaryDB.readCache(path.resolve(__dirname + authUsersPath)).then((cache)=>{
+            let auth_users = JSON.parse(<string>cache);
+            if (auth_users.HomeUpdates && Array.isArray(auth_users.HomeUpdates)) {
+                this.authenticatedUsers = auth_users.HomeUpdates;
+            } else {
+                throw "Unable to retrieve authenticated Home Updates users.";
+            }
+        })
+    }
+
+    private is_user_authenticated(req_user):boolean {
+        let users = this.authenticatedUsers;
+        for (var i = 0; i < users.length; i++) {
+            if (req_user.DomainName.toLowerCase() == users[i].domain.toLowerCase()
+             && req_user.UserName.toLowerCase() == users[i].username.toLowerCase()) {
+                 return true;
+             }
+        }
+        return false;
+    }
+
+    private getAPICalls():Array<ArkamAPICall> {
+        return [
             new ArkamAPICall(ARKAM_API_METHODS.get, '/home-update', (req,res)=>{this.get_updates_call(req, res)}),
             new ArkamAPICall(ARKAM_API_METHODS.post, '/home-update/write', (req,res)=>{this.write_updates_call(req, res)}),
+            new ArkamAPICall(ARKAM_API_METHODS.get, '/auth-users', (req,res)=>{res.sendFile(path.resolve(__dirname + "/../databases/auth-users.json"))}),
             new ArkamAPICall(ARKAM_API_METHODS.get, '/home-update/new-template', (req,res)=>{
                 res.send(`
                 <div class="col-sm-4">
@@ -45,8 +76,6 @@ export class HomeUpdateManager {
             })
         ];
 
-        this.portalAPI.registerAPICalls(this.calls);
-        this.expiryAccountant = setInterval(()=>{this.account_for_expired_updates()}, this.expiryCheck);
     }
 
     private async account_for_expired_updates() {
@@ -87,15 +116,19 @@ export class HomeUpdateManager {
     }
 
     write_updates_call(req,res) {
-        let new_updates = req.body;
-        if (new_updates.empty && new_updates.updates == undefined) {
-            new_updates.updates = [];
-        }
-        if (new_updates.updates) {
-            this.set_updates(HomeUpdate.fromArray(new_updates.updates));
-            res.sendStatus(200);
+        if (!this.is_user_authenticated(req.ntlm)) {
+            res.sendStatus(401);
         } else {
-            res.sendStatus(400);
+            let new_updates = req.body;
+            if (new_updates.empty && new_updates.updates == undefined) {
+                new_updates.updates = [];
+            }
+            if (new_updates.updates) {
+                this.set_updates(HomeUpdate.fromArray(new_updates.updates));
+                res.sendStatus(200);
+            } else {
+                res.sendStatus(400);
+            }
         }
     }
 }

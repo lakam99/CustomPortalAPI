@@ -11,6 +11,18 @@ var DBManager = /** @class */ (function () {
         this.cache = JSON.parse(fs.readFileSync(this.path, 'utf8'));
         this.writing = false;
     }
+    DBManager.prototype.readCache = function (path) {
+        return new Promise(function (resolve, reject) {
+            fs.readFile(path, 'utf8', function (err, data) {
+                if (err) {
+                    reject(err);
+                }
+                else {
+                    resolve(data);
+                }
+            });
+        });
+    };
     DBManager.prototype.writeToDB = function () {
         var _this = this;
         this.writing = true;
