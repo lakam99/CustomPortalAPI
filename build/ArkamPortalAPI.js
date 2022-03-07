@@ -5,6 +5,7 @@ var express = require('express');
 var parser = require('body-parser');
 var path = require('path');
 var ntlm = require('express-ntlm');
+var fs = require('fs');
 var ArkamAPICall_1 = require("./ArkamAPICall");
 var HomeUpdateManager_1 = require("./HomeUpdateManager");
 var ArkamPortalAPI = /** @class */ (function () {
@@ -12,6 +13,8 @@ var ArkamPortalAPI = /** @class */ (function () {
         var _this = this;
         this.api = express();
         this.port = process.env.port || 6942;
+        this.ldap_path = "/../databases/ldap-control.json";
+        this.ldap_options = JSON.parse(fs.readFileSync(path.resolve(__dirname + this.ldap_path), 'utf8'));
         this.api.options('*', function (req, res, next) {
             res = ArkamPortalAPI.setHeaders(res);
             res.sendStatus(200);
@@ -29,8 +32,8 @@ var ArkamPortalAPI = /** @class */ (function () {
                 var args = Array.prototype.slice.apply(arguments);
                 console.log.apply(null, args);
             },
-            domain: 'OU=Dev_Users,DC=nserc,DC=ca',
-            domaincontroller: 'ldap://DEVDC3.nserc.ca'
+            domain: this.ldap_options.domain,
+            domaincontroller: this.ldap_options.domaincontroller
         }));
         this.api.use(function (req, res, next) {
             console.log("User: " + res.locals.ntlm.UserName);

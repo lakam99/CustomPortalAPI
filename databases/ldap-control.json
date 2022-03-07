@@ -1,0 +1,4 @@
+{
+    "domain": "OU=Dev_Users,DC=nserc,DC=ca",
+    "domaincontroller": "ldap://DEVDC3.nserc.ca"
+}
