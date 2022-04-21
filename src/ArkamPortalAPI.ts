@@ -11,7 +11,7 @@ import { TemplateManager } from './TemplateManager';
 
 export class ArkamPortalAPI {
     api = express();
-    port = process.env.port || 6942;
+    port = process.env.port || 5000;
     ldap_path = "/../databases/ldap-control.json";
     certs_path = "/../certs/";
     ldap_options:any;
@@ -22,10 +22,6 @@ export class ArkamPortalAPI {
     https_cert:any;
 
     constructor() {
-        this.ldap_options = JSON.parse(fs.readFileSync(path.resolve(__dirname + this.ldap_path), 'utf8'));
-        this.https_key = fs.readFileSync(path.resolve(__dirname + this.certs_path + 'decrypt-key.key'));
-        this.https_cert = fs.readFileSync(path.resolve(__dirname + this.certs_path + 'ottansm1-cert.crt'));
-
         this.api.options('*',(req, res,next)=>{
             res = ArkamPortalAPI.setHeaders(res);
             res.sendStatus(200);
@@ -42,21 +38,24 @@ export class ArkamPortalAPI {
         this.api.get('/index', (req, res)=>{res.sendFile(path.resolve(__dirname + "/../index.html"))});
         this.api.get('/jquery', (req, res)=>{res.sendFile(path.resolve(__dirname + "/../jquery-3.6.0.min.js"))});
         this.api.get('/homepage-css', (req, res)=>{res.sendFile(path.resolve(__dirname + "/../homepage.css"))});
+        this.api.get('/assets/trash.png', (req, res)=>{res.sendFile(path.resolve(__dirname + "/../trash.png"))});
+        this.api.get('/assets/trash-open.png', (req,res)=>{res.sendFile(path.resolve(__dirname + "/../trash-open.png"))});
 
-        this.api.use(ntlm({
+        this.ldap_options = JSON.parse(fs.readFileSync(path.resolve(__dirname + this.ldap_path), 'utf8'));
+        this.https_key = fs.readFileSync(path.resolve(__dirname + this.certs_path + 'decrypt-key.key'));
+        this.https_cert = fs.readFileSync(path.resolve(__dirname + this.certs_path + 'ottansm1-cert.crt'));
+
+        /*this.api.use(ntlm({
             debug: function() {
                 var args = Array.prototype.slice.apply(arguments);
                 console.log.apply(null, args);
             },
             domain: this.ldap_options.domain,
-            domaincontroller: this.ldap_options.domaincontroller,
-            tlsOptions: {
-                ca: this.https_cert
-            }
-        }));
+            domaincontroller: this.ldap_options.domaincontroller
+        }));*/
 
         this.api.use(function(req, res, next) {
-            console.log("User: " + res.locals.ntlm.UserName);
+            //console.log("User: " + res.locals.ntlm.UserName);
             next();
         });
 
@@ -68,10 +67,10 @@ export class ArkamPortalAPI {
             var host = this.api_server.address().address;
             var port = this.port;
 
-            console.log("Listening at http://%s:%s", host, port);
+            console.log("Listening at https://%s:%s", host, port);
         });
 
-        this.templateManager = new TemplateManager(this);
+        //this.templateManager = new TemplateManager(this);
         this.homeUpdateManager = new HomeUpdateManager(this);
     }
 

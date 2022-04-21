@@ -9,17 +9,13 @@ var fs = require('fs');
 var https = require('https');
 var ArkamAPICall_1 = require("./ArkamAPICall");
 var HomeUpdateManager_1 = require("./HomeUpdateManager");
-var TemplateManager_1 = require("./TemplateManager");
 var ArkamPortalAPI = /** @class */ (function () {
     function ArkamPortalAPI() {
         var _this = this;
         this.api = express();
-        this.port = process.env.port || 6942;
+        this.port = process.env.port || 5000;
         this.ldap_path = "/../databases/ldap-control.json";
         this.certs_path = "/../certs/";
-        this.ldap_options = JSON.parse(fs.readFileSync(path.resolve(__dirname + this.ldap_path), 'utf8'));
-        this.https_key = fs.readFileSync(path.resolve(__dirname + this.certs_path + 'decrypt-key.key'));
-        this.https_cert = fs.readFileSync(path.resolve(__dirname + this.certs_path + 'ottansm1-cert.crt'));
         this.api.options('*', function (req, res, next) {
             res = ArkamPortalAPI.setHeaders(res);
             res.sendStatus(200);
@@ -33,19 +29,21 @@ var ArkamPortalAPI = /** @class */ (function () {
         this.api.get('/index', function (req, res) { res.sendFile(path.resolve(__dirname + "/../index.html")); });
         this.api.get('/jquery', function (req, res) { res.sendFile(path.resolve(__dirname + "/../jquery-3.6.0.min.js")); });
         this.api.get('/homepage-css', function (req, res) { res.sendFile(path.resolve(__dirname + "/../homepage.css")); });
-        this.api.use(ntlm({
-            debug: function () {
+        this.api.get('/assets/trash.png', function (req, res) { res.sendFile(path.resolve(__dirname + "/../trash.png")); });
+        this.api.get('/assets/trash-open.png', function (req, res) { res.sendFile(path.resolve(__dirname + "/../trash-open.png")); });
+        this.ldap_options = JSON.parse(fs.readFileSync(path.resolve(__dirname + this.ldap_path), 'utf8'));
+        this.https_key = fs.readFileSync(path.resolve(__dirname + this.certs_path + 'decrypt-key.key'));
+        this.https_cert = fs.readFileSync(path.resolve(__dirname + this.certs_path + 'ottansm1-cert.crt'));
+        /*this.api.use(ntlm({
+            debug: function() {
                 var args = Array.prototype.slice.apply(arguments);
                 console.log.apply(null, args);
             },
             domain: this.ldap_options.domain,
-            domaincontroller: this.ldap_options.domaincontroller,
-            tlsOptions: {
-                ca: this.https_cert
-            }
-        }));
+            domaincontroller: this.ldap_options.domaincontroller
+        }));*/
         this.api.use(function (req, res, next) {
-            console.log("User: " + res.locals.ntlm.UserName);
+            //console.log("User: " + res.locals.ntlm.UserName);
             next();
         });
         //experimental
@@ -55,9 +53,9 @@ var ArkamPortalAPI = /** @class */ (function () {
         }, this.api).listen(this.port, function () {
             var host = _this.api_server.address().address;
             var port = _this.port;
-            console.log("Listening at http://%s:%s", host, port);
+            console.log("Listening at https://%s:%s", host, port);
         });
-        this.templateManager = new TemplateManager_1.TemplateManager(this);
+        //this.templateManager = new TemplateManager(this);
         this.homeUpdateManager = new HomeUpdateManager_1.HomeUpdateManager(this);
     }
     ArkamPortalAPI.setHeaders = function (res) {
