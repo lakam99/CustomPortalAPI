@@ -4,9 +4,11 @@ var path = require('path');
 var ntlm = require('express-ntlm');
 const fs = require('fs');
 const https = require('https');
+const WebSockets = require('ws');
 
 import {ArkamAPICall, ARKAM_API_METHODS} from './ArkamAPICall';
 import { HomeUpdateManager } from './HomeUpdateManager';
+import { SocketManager } from './SocketManager';
 import { TemplateManager } from './TemplateManager';
 
 export class ArkamPortalAPI {
@@ -16,16 +18,41 @@ export class ArkamPortalAPI {
     certs_path = "/../certs/";
     ldap_options:any;
     api_server:any;
+    websocket_server:any;
+    websocket:any;
     templateManager:TemplateManager;
     homeUpdateManager:HomeUpdateManager;
+    socketManager:SocketManager;
     https_key:any;
     https_cert:any;
 
     constructor() {
+        this.ldap_options = JSON.parse(fs.readFileSync(path.resolve(__dirname + this.ldap_path), 'utf8'));
+        this.https_key = fs.readFileSync(path.resolve(__dirname + this.certs_path + 'decrypt-key.key'));
+        this.https_cert = fs.readFileSync(path.resolve(__dirname + this.certs_path + 'ottansm1-cert.crt'));
+        this.init_api_server();
+        this.init_websocket_server();
+    }
+
+    private init_websocket_server() {
+        this.websocket_server = https.createServer({
+            key: this.https_key,
+            cert:this.https_cert
+        }, this.api);
+
+        this.websocket = new WebSockets.Server({server:this.websocket_server});
+        this.socketManager = new SocketManager(this.websocket);
+        
+        this.websocket_server.listen('8181', ()=>{
+            console.log("Websocket server started...");
+        })
+    }
+
+    private init_api_server() {
         this.api.options('*',(req, res,next)=>{
             res = ArkamPortalAPI.setHeaders(res);
             res.sendStatus(200);
-        })
+        });
 
         this.api.use((req, res, next)=> {
             res = ArkamPortalAPI.setHeaders(res);
@@ -41,25 +68,6 @@ export class ArkamPortalAPI {
         this.api.get('/assets/trash.png', (req, res)=>{res.sendFile(path.resolve(__dirname + "/../trash.png"))});
         this.api.get('/assets/trash-open.png', (req,res)=>{res.sendFile(path.resolve(__dirname + "/../trash-open.png"))});
 
-        this.ldap_options = JSON.parse(fs.readFileSync(path.resolve(__dirname + this.ldap_path), 'utf8'));
-        this.https_key = fs.readFileSync(path.resolve(__dirname + this.certs_path + 'decrypt-key.key'));
-        this.https_cert = fs.readFileSync(path.resolve(__dirname + this.certs_path + 'ottansm1-cert.crt'));
-
-        /*this.api.use(ntlm({
-            debug: function() {
-                var args = Array.prototype.slice.apply(arguments);
-                console.log.apply(null, args);
-            },
-            domain: this.ldap_options.domain,
-            domaincontroller: this.ldap_options.domaincontroller
-        }));*/
-
-        this.api.use(function(req, res, next) {
-            //console.log("User: " + res.locals.ntlm.UserName);
-            next();
-        });
-
-        //experimental
         this.api_server = https.createServer({
             key: this.https_key,
             cert: this.https_cert
@@ -70,7 +78,6 @@ export class ArkamPortalAPI {
             console.log("Listening at https://%s:%s", host, port);
         });
 
-        //this.templateManager = new TemplateManager(this);
         this.homeUpdateManager = new HomeUpdateManager(this);
     }
 

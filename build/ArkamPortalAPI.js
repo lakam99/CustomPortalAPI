@@ -1,85 +1,85 @@
 "use strict";
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.ArkamPortalAPI = void 0;
-var express = require('express');
+const express = require('express');
 var parser = require('body-parser');
 var path = require('path');
 var ntlm = require('express-ntlm');
-var fs = require('fs');
-var https = require('https');
-var ArkamAPICall_1 = require("./ArkamAPICall");
-var HomeUpdateManager_1 = require("./HomeUpdateManager");
-var ArkamPortalAPI = /** @class */ (function () {
-    function ArkamPortalAPI() {
-        var _this = this;
+const fs = require('fs');
+const https = require('https');
+const WebSockets = require('ws');
+const ArkamAPICall_1 = require("./ArkamAPICall");
+const HomeUpdateManager_1 = require("./HomeUpdateManager");
+const SocketManager_1 = require("./SocketManager");
+class ArkamPortalAPI {
+    constructor() {
         this.api = express();
         this.port = process.env.port || 5000;
         this.ldap_path = "/../databases/ldap-control.json";
         this.certs_path = "/../certs/";
-        this.api.options('*', function (req, res, next) {
+        this.ldap_options = JSON.parse(fs.readFileSync(path.resolve(__dirname + this.ldap_path), 'utf8'));
+        this.https_key = fs.readFileSync(path.resolve(__dirname + this.certs_path + 'decrypt-key.key'));
+        this.https_cert = fs.readFileSync(path.resolve(__dirname + this.certs_path + 'ottansm1-cert.crt'));
+        this.init_api_server();
+        this.init_websocket_server();
+    }
+    init_websocket_server() {
+        this.websocket_server = https.createServer({
+            key: this.https_key,
+            cert: this.https_cert
+        }, this.api);
+        this.websocket = new WebSockets.Server({ server: this.websocket_server });
+        this.socketManager = new SocketManager_1.SocketManager(this.websocket);
+        this.websocket_server.listen('8181', () => {
+            console.log("Websocket server started...");
+        });
+    }
+    init_api_server() {
+        this.api.options('*', (req, res, next) => {
             res = ArkamPortalAPI.setHeaders(res);
             res.sendStatus(200);
         });
-        this.api.use(function (req, res, next) {
+        this.api.use((req, res, next) => {
             res = ArkamPortalAPI.setHeaders(res);
             next();
         });
         this.api.use(parser.json());
         this.api.use(parser.urlencoded({ extended: true }));
-        this.api.get('/index', function (req, res) { res.sendFile(path.resolve(__dirname + "/../index.html")); });
-        this.api.get('/jquery', function (req, res) { res.sendFile(path.resolve(__dirname + "/../jquery-3.6.0.min.js")); });
-        this.api.get('/homepage-css', function (req, res) { res.sendFile(path.resolve(__dirname + "/../homepage.css")); });
-        this.api.get('/assets/trash.png', function (req, res) { res.sendFile(path.resolve(__dirname + "/../trash.png")); });
-        this.api.get('/assets/trash-open.png', function (req, res) { res.sendFile(path.resolve(__dirname + "/../trash-open.png")); });
-        this.ldap_options = JSON.parse(fs.readFileSync(path.resolve(__dirname + this.ldap_path), 'utf8'));
-        this.https_key = fs.readFileSync(path.resolve(__dirname + this.certs_path + 'decrypt-key.key'));
-        this.https_cert = fs.readFileSync(path.resolve(__dirname + this.certs_path + 'ottansm1-cert.crt'));
-        /*this.api.use(ntlm({
-            debug: function() {
-                var args = Array.prototype.slice.apply(arguments);
-                console.log.apply(null, args);
-            },
-            domain: this.ldap_options.domain,
-            domaincontroller: this.ldap_options.domaincontroller
-        }));*/
-        this.api.use(function (req, res, next) {
-            //console.log("User: " + res.locals.ntlm.UserName);
-            next();
-        });
-        //experimental
+        this.api.get('/index', (req, res) => { res.sendFile(path.resolve(__dirname + "/../index.html")); });
+        this.api.get('/jquery', (req, res) => { res.sendFile(path.resolve(__dirname + "/../jquery-3.6.0.min.js")); });
+        this.api.get('/homepage-css', (req, res) => { res.sendFile(path.resolve(__dirname + "/../homepage.css")); });
+        this.api.get('/assets/trash.png', (req, res) => { res.sendFile(path.resolve(__dirname + "/../trash.png")); });
+        this.api.get('/assets/trash-open.png', (req, res) => { res.sendFile(path.resolve(__dirname + "/../trash-open.png")); });
         this.api_server = https.createServer({
             key: this.https_key,
             cert: this.https_cert
-        }, this.api).listen(this.port, function () {
-            var host = _this.api_server.address().address;
-            var port = _this.port;
+        }, this.api).listen(this.port, () => {
+            var host = this.api_server.address().address;
+            var port = this.port;
             console.log("Listening at https://%s:%s", host, port);
         });
-        //this.templateManager = new TemplateManager(this);
         this.homeUpdateManager = new HomeUpdateManager_1.HomeUpdateManager(this);
     }
-    ArkamPortalAPI.setHeaders = function (res) {
+    static setHeaders(res) {
         res.header("Access-Control-Allow-Origin", "*");
         res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept,__requestverificationtoken");
         res.header("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
         res.header("Access-Control-Allow-Credentials", "true");
         return res;
-    };
-    ArkamPortalAPI.prototype.registerAPI = function (new_api) {
+    }
+    registerAPI(new_api) {
         if (new_api.get_method() == ArkamAPICall_1.ARKAM_API_METHODS.get) {
             this.api.get(new_api.get_name(), new_api.get_callback());
         }
         else {
             this.api.post(new_api.get_name(), parser.urlencoded({ extended: true }), new_api.get_callback());
         }
-    };
-    ArkamPortalAPI.prototype.registerAPICalls = function (calls) {
-        var _this = this;
-        calls.forEach(function (call) {
-            _this.registerAPI(call);
+    }
+    registerAPICalls(calls) {
+        calls.forEach((call) => {
+            this.registerAPI(call);
         });
-    };
-    return ArkamPortalAPI;
-}());
+    }
+}
 exports.ArkamPortalAPI = ArkamPortalAPI;
-var arkamPortalAPI = new ArkamPortalAPI();
+const arkamPortalAPI = new ArkamPortalAPI();

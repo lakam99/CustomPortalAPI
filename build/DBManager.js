@@ -1,19 +1,38 @@
 "use strict";
-exports.__esModule = true;
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.primaryDB = void 0;
-var fs = require("fs");
-var EventEmitter = require('events').EventEmitter;
-var eventManager = new EventEmitter();
-var DBManager = /** @class */ (function () {
-    function DBManager() {
+const fs = __importStar(require("fs"));
+const { EventEmitter } = require('events');
+const eventManager = new EventEmitter();
+class DBManager {
+    constructor() {
         this.path = __dirname + "/../databases/keytable.json";
         this.done_writing = 'writing-finished';
         this.cache = JSON.parse(fs.readFileSync(this.path, 'utf8'));
         this.writing = false;
     }
-    DBManager.prototype.readCache = function (path) {
-        return new Promise(function (resolve, reject) {
-            fs.readFile(path, 'utf8', function (err, data) {
+    readCache(path) {
+        return new Promise((resolve, reject) => {
+            fs.readFile(path, 'utf8', (err, data) => {
                 if (err) {
                     reject(err);
                 }
@@ -22,39 +41,36 @@ var DBManager = /** @class */ (function () {
                 }
             });
         });
-    };
-    DBManager.prototype.writeToDB = function () {
-        var _this = this;
+    }
+    writeToDB() {
         this.writing = true;
-        fs.writeFile(this.path, JSON.stringify(this.cache), function (err) {
+        fs.writeFile(this.path, JSON.stringify(this.cache), (err) => {
             if (err) {
                 console.log(err);
             }
-            _this.writing = false;
-            eventManager.emit(_this.done_writing);
+            this.writing = false;
+            eventManager.emit(this.done_writing);
         });
-    };
-    DBManager.prototype.get = function (table) {
+    }
+    get(table) {
         if (this.cache.table[table]) {
             return this.cache.table[table];
         }
         else {
             throw "No such table exists" + table + ".";
         }
-    };
-    DBManager.prototype.put = function (table, data) {
-        var _this = this;
+    }
+    put(table, data) {
         this.cache.table[table] = data;
         if (this.writing) {
-            eventManager.on(this.done_writing, function () {
-                eventManager.removeAllListeners(_this.done_writing);
-                _this.writeToDB();
+            eventManager.on(this.done_writing, () => {
+                eventManager.removeAllListeners(this.done_writing);
+                this.writeToDB();
             });
         }
         else {
             this.writeToDB();
         }
-    };
-    return DBManager;
-}());
+    }
+}
 exports.primaryDB = new DBManager();

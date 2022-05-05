@@ -1,11 +1,10 @@
 "use strict";
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.TemplateManager = void 0;
-var DBManager_1 = require("./DBManager");
-var ArkamAPICall_1 = require("./ArkamAPICall");
-var TemplateManager = /** @class */ (function () {
-    function TemplateManager(apiInstance) {
-        var _this = this;
+const DBManager_1 = require("./DBManager");
+const ArkamAPICall_1 = require("./ArkamAPICall");
+class TemplateManager {
+    constructor(apiInstance) {
         this.dbname = "templates";
         this.portalAPI = apiInstance;
         try {
@@ -16,19 +15,19 @@ var TemplateManager = /** @class */ (function () {
             this.writeDB();
         }
         this.calls = [
-            new ArkamAPICall_1.ArkamAPICall(ArkamAPICall_1.ARKAM_API_METHODS.get, '/template', function (req, res) { _this.get_template_call(req, res); }),
-            new ArkamAPICall_1.ArkamAPICall(ArkamAPICall_1.ARKAM_API_METHODS.post, '/template/write', function (req, res) { _this.write_template_call(req, res); })
+            new ArkamAPICall_1.ArkamAPICall(ArkamAPICall_1.ARKAM_API_METHODS.get, '/template', (req, res) => { this.get_template_call(req, res); }),
+            new ArkamAPICall_1.ArkamAPICall(ArkamAPICall_1.ARKAM_API_METHODS.post, '/template/write', (req, res) => { this.write_template_call(req, res); })
         ];
         this.portalAPI.registerAPICalls(this.calls);
     }
-    TemplateManager.prototype.writeDB = function () {
+    writeDB() {
         DBManager_1.primaryDB.put(this.dbname, this.cache);
-    };
-    TemplateManager.prototype.get_template_call = function (req, res) {
-        var username = req.query.username;
+    }
+    get_template_call(req, res) {
+        let username = req.query.username;
         if (username) {
             try {
-                res.send("".concat(JSON.stringify(this.get_user_template(username))));
+                res.send(`${JSON.stringify(this.get_user_template(username))}`);
             }
             catch (_a) {
                 res.sendStatus(404);
@@ -37,10 +36,10 @@ var TemplateManager = /** @class */ (function () {
         else {
             res.sendStatus(400);
         }
-    };
-    TemplateManager.prototype.write_template_call = function (req, res) {
-        var username = req.body.username;
-        var template = req.body.template;
+    }
+    write_template_call(req, res) {
+        let username = req.body.username;
+        let template = req.body.template;
         if (username && template) {
             this.write_user_template(username, template);
             res.sendStatus(200);
@@ -48,18 +47,17 @@ var TemplateManager = /** @class */ (function () {
         else {
             res.sendStatus(400);
         }
-    };
-    TemplateManager.prototype.get_user_template = function (username) {
+    }
+    get_user_template(username) {
         return this.cache.templateData[username];
-    };
-    TemplateManager.prototype.write_user_template = function (username, html_template) {
+    }
+    write_user_template(username, html_template) {
         this.cache.templateData[username] = {};
         this.cache.templateData[username] = {
             Id: username, Name: username, Subject: "", Description: "Your custom template",
             Content: html_template, ContentIE: html_template
         };
         this.writeDB();
-    };
-    return TemplateManager;
-}());
+    }
+}
 exports.TemplateManager = TemplateManager;

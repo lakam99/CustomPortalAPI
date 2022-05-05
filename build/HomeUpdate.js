@@ -1,9 +1,9 @@
 "use strict";
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.HomeUpdate = void 0;
-var reusable_1 = require("./reusable");
-var HomeUpdate = /** @class */ (function () {
-    function HomeUpdate(type, title, text, timestamp, expiry_date) {
+const reusable_1 = require("./reusable");
+class HomeUpdate {
+    constructor(type, title, text, timestamp, expiry_date) {
         if (type > 0 && type < 4) {
             this.type = type;
         }
@@ -15,7 +15,7 @@ var HomeUpdate = /** @class */ (function () {
         this.timestamp = timestamp;
         this.expiry_date = expiry_date;
     }
-    HomeUpdate.prototype.getJSON = function () {
+    getJSON() {
         return {
             type: this.type,
             title: this.title,
@@ -23,17 +23,16 @@ var HomeUpdate = /** @class */ (function () {
             timestamp: this.timestamp,
             expiry_date: this.expiry_date
         };
-    };
-    HomeUpdate.toArray = function (updates) {
-        return updates.map(function (update) {
+    }
+    static toArray(updates) {
+        return updates.map((update) => {
             return update.getJSON();
         });
-    };
-    HomeUpdate.fromArray = function (updates) {
-        return updates.map(function (update) {
+    }
+    static fromArray(updates) {
+        return updates.map((update) => {
             return new HomeUpdate(update.type, update.title, update.text, update.timestamp, update.expiry_date);
         });
-    };
-    return HomeUpdate;
-}());
+    }
+}
 exports.HomeUpdate = HomeUpdate;

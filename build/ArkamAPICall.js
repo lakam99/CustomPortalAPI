@@ -1,12 +1,12 @@
 "use strict";
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.ArkamAPICall = exports.ARKAM_API_METHODS = void 0;
 exports.ARKAM_API_METHODS = {
     post: 1,
     get: 2
 };
-var ArkamAPICall = /** @class */ (function () {
-    function ArkamAPICall(method, name, callback) {
+class ArkamAPICall {
+    constructor(method, name, callback) {
         if (method > 0 && method < 3) {
             this.method = method;
         }
@@ -16,15 +16,14 @@ var ArkamAPICall = /** @class */ (function () {
         this.name = name;
         this.callback = callback;
     }
-    ArkamAPICall.prototype.get_method = function () {
+    get_method() {
         return this.method;
-    };
-    ArkamAPICall.prototype.get_name = function () {
+    }
+    get_name() {
         return this.name;
-    };
-    ArkamAPICall.prototype.get_callback = function () {
+    }
+    get_callback() {
         return this.callback;
-    };
-    return ArkamAPICall;
-}());
+    }
+}
 exports.ArkamAPICall = ArkamAPICall;
