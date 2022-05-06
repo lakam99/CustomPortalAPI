@@ -3,6 +3,11 @@ import { SocketData } from "./SocketData";
 export class WebsocketProvider {
     name:string;
     status:string;
+    classType:any;
+
+    constructor(name:string, classType:any) {
+        Object.assign(this, {name, classType});
+    }
 
     process_data(data:SocketData):Promise<SocketData> {
         return new Promise((resolve,reject)=>{

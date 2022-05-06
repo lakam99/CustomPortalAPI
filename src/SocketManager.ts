@@ -2,6 +2,7 @@ import { ActiveConnections } from "./ActiveConnections";
 import { SocketData } from "./SocketData";
 import { WebSocketInterface } from "./WebsocketInterface";
 import { WebsocketProvider } from "./WebsocketProvider";
+import {OldOpenTickets} from "./OldOpenTickets.WebsocketProvider";
 
 export const PREMADE_RESPONSES = {
     setup: new SocketData({controller_needed:true}),
@@ -18,6 +19,8 @@ export class SocketManager {
     constructor(socket) {
         this.socket = socket;
         this.active_connections = new ActiveConnections();
+        this.providers = [];
+        this.providers.push(new WebsocketProvider('Old Open Tickets', OldOpenTickets));
         this.process_connection();
     }
 
@@ -40,7 +43,7 @@ export class SocketManager {
                     if (!provider)
                         SocketManager.send_err_response(client_connection, PREMADE_RESPONSES.no_operator);
                     else {
-                        this.active_connections.push(new WebSocketInterface(client_connection, provider));
+                        this.active_connections.push(new WebSocketInterface(client_connection, new provider.classType()));
                     }
                 }
             }, {once:true});

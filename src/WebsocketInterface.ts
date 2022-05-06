@@ -14,6 +14,6 @@ export class WebSocketInterface {
     }
 
     process_data(data:SocketData) {
-        this.provider.process_data(data);
+        this.provider.process_data(data).then(data=>this.send(data));
     }
 }

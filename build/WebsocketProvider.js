@@ -3,6 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.WebsocketProvider = void 0;
 const SocketData_1 = require("./SocketData");
 class WebsocketProvider {
+    constructor(name, classType) {
+        Object.assign(this, { name, classType });
+    }
     process_data(data) {
         return new Promise((resolve, reject) => {
             switch (data['request']) {

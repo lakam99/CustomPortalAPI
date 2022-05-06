@@ -9,7 +9,7 @@ class WebSocketInterface {
         this.connection.send(data.toString());
     }
     process_data(data) {
-        this.provider.process_data(data);
+        this.provider.process_data(data).then(data => this.send(data));
     }
 }
 exports.WebSocketInterface = WebSocketInterface;

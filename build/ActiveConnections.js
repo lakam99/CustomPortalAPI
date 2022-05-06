@@ -18,8 +18,8 @@ class ActiveConnections extends Array {
         };
     }
     push(...items) {
-        let r = super.push(...items);
         [...items].forEach(item => this.start_listening(item));
+        let r = super.push(...items);
         return r;
     }
 }

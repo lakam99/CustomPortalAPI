@@ -21,8 +21,8 @@ export class ActiveConnections extends Array<WebSocketInterface>{
     }
 
     push(...items: WebSocketInterface[]): number {
-        let r = super.push(...items);
         [...items].forEach(item=>this.start_listening(item));
+        let r = super.push(...items);
         return r;
     }
 }
