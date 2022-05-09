@@ -9,7 +9,8 @@ const OldOpenTickets_WebsocketProvider_1 = require("./OldOpenTickets.WebsocketPr
 exports.PREMADE_RESPONSES = {
     setup: new SocketData_1.SocketData({ controller_needed: true }),
     no_operator: new SocketData_1.SocketData({ error: 'You must provide a valid operator.' }),
-    json_required: new SocketData_1.SocketData({ error: 'You must provide json data.' })
+    json_required: new SocketData_1.SocketData({ error: 'You must provide json data.' }),
+    provider_accept: new SocketData_1.SocketData({ accepted: true, message: 'The provider has accepted your connection.' })
 };
 class SocketManager {
     constructor(socket) {
@@ -23,6 +24,33 @@ class SocketManager {
         client.send(response.toString());
         client.close();
     }
+    match_connection(client_connection, provider) {
+        return this.active_connections.filter((active_connection) => {
+            return active_connection.provider.name == provider.name && active_connection.IP == client_connection['_socket'].remoteAddress;
+        });
+    }
+    do_if_client_reconnecting_to_provider(client_connection, provider) {
+        var matches = this.match_connection(client_connection, provider);
+        if (matches.length) {
+            var match = matches.length > 1 ? matches[matches.length - 1] : matches[0];
+            match.reconnect(client_connection);
+            return true;
+        }
+        return false;
+    }
+    get_provider_by_name(name) {
+        return this.providers.filter(provider => provider.name == name)[0];
+    }
+    introduce_connection_to_provider(client_connection, parsed) {
+        let provider = this.get_provider_by_name(parsed['provider']);
+        if (!provider) {
+            SocketManager.send_err_response(client_connection, exports.PREMADE_RESPONSES.no_operator);
+        }
+        else if (!this.do_if_client_reconnecting_to_provider(client_connection, provider)) {
+            this.active_connections.push(new WebsocketInterface_1.WebSocketInterface(client_connection, new provider.classType()));
+            client_connection.send(exports.PREMADE_RESPONSES.provider_accept.toString());
+        }
+    }
     process_connection() {
         this.socket.on('connection', (client_connection) => {
             client_connection.addEventListener('message', (data) => {
@@ -30,16 +58,10 @@ class SocketManager {
                 if (parsed === false) {
                     SocketManager.send_err_response(client_connection, exports.PREMADE_RESPONSES.json_required);
                 }
-                ;
-                if (parsed['provider'] === undefined)
+                else if (parsed['provider'] === undefined)
                     SocketManager.send_err_response(client_connection, exports.PREMADE_RESPONSES.no_operator);
                 else {
-                    let provider = this.providers.filter(provider => provider.name == parsed['provider'])[0];
-                    if (!provider)
-                        SocketManager.send_err_response(client_connection, exports.PREMADE_RESPONSES.no_operator);
-                    else {
-                        this.active_connections.push(new WebsocketInterface_1.WebSocketInterface(client_connection, new provider.classType()));
-                    }
+                    this.introduce_connection_to_provider(client_connection, parsed);
                 }
             }, { once: true });
         });

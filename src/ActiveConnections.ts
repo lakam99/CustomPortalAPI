@@ -9,19 +9,8 @@ export class ActiveConnections extends Array<WebSocketInterface>{
         super();
     }
 
-    start_listening(client:WebSocketInterface) {
-        client.connection.onmessage = (message:MessageEvent) => {
-            let parsed_data = SocketData.receive_data(message.data);
-            if (parsed_data === false)
-                client.send(PREMADE_RESPONSES.json_required);
-            else {
-                client.process_data(parsed_data);
-            }
-        }
-    }
-
     push(...items: WebSocketInterface[]): number {
-        [...items].forEach(item=>this.start_listening(item));
+        [...items].forEach(item=>item.start_listening());
         let r = super.push(...items);
         return r;
     }
