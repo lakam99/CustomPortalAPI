@@ -10,7 +10,8 @@ exports.PREMADE_RESPONSES = {
     setup: new SocketData_1.SocketData({ controller_needed: true }),
     no_operator: new SocketData_1.SocketData({ error: 'You must provide a valid operator.' }),
     json_required: new SocketData_1.SocketData({ error: 'You must provide json data.' }),
-    provider_accept: new SocketData_1.SocketData({ accepted: true, message: 'The provider has accepted your connection.' })
+    provider_accept: new SocketData_1.SocketData({ accepted: true, message: 'The provider has accepted your connection.' }),
+    ok: new SocketData_1.SocketData({ ok: true })
 };
 class SocketManager {
     constructor(socket) {

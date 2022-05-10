@@ -1,4 +1,3 @@
-import { resolve } from "path/posix";
 import { today_add } from "./reusable";
 import { WebsocketProvider } from "./WebsocketProvider";
 const axios = require('axios');
@@ -41,7 +40,7 @@ export class OldOpenTickets extends WebsocketProvider {
                     (resp_data)=>{
                         resolve(resp_data.data);
                     }
-                ).catch((e)=>{throw e})
+                ).catch((e)=>{reject(e)})
             })
         });
     }
@@ -55,11 +54,14 @@ export class OldOpenTickets extends WebsocketProvider {
                     return ticket_created <= threshold;
                 });
                 resolve(old_tickets);
-            })
+            }, (e)=>{reject(e)})
         })
     }
 
     do_work (data):Promise<any> {
-        return this.get_user_old_tickets(data);
+        if (this.work_data)
+            return new Promise(resolve=>resolve(this.work_data));
+        else 
+            return this.get_user_old_tickets(data);
     }
 }

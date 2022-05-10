@@ -8,7 +8,8 @@ export const PREMADE_RESPONSES = {
     setup: new SocketData({controller_needed:true}),
     no_operator: new SocketData({error: 'You must provide a valid operator.'}),
     json_required: new SocketData({error: 'You must provide json data.'}),
-    provider_accept: new SocketData({accepted: true, message: 'The provider has accepted your connection.'})
+    provider_accept: new SocketData({accepted: true, message: 'The provider has accepted your connection.'}),
+    ok: new SocketData({ok:true})
 }
 
 export class SocketManager {

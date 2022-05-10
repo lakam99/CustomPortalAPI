@@ -38,15 +38,18 @@ class WebSocketInterface {
         let new_ip = this.connection['_socket'].remoteAddress;
         if (current_ip == new_ip) {
             this.connection = new_connection;
-            this.run_queue();
             this.start_listening();
+            this.send(SocketManager_1.PREMADE_RESPONSES.provider_accept);
         }
         else {
             throw `Old IP ${current_ip} does not match new IP ${new_ip}.`;
         }
     }
     process_data(data) {
-        this.provider.process_data(data).then(data => this.send(data));
+        if (this.data_queue.length)
+            this.run_queue();
+        else
+            this.provider.process_data(data).then(data => this.send(data), error => this.send(new SocketData_1.SocketData({ error })));
     }
 }
 exports.WebSocketInterface = WebSocketInterface;

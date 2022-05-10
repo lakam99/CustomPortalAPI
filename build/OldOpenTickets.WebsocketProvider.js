@@ -35,7 +35,7 @@ class OldOpenTickets extends WebsocketProvider_1.WebsocketProvider {
                 };
                 axios.get(`http://ottansm2/api/V3/WorkItem/GetGridWorkItemsByUser?UserId=${data.userId}&isScoped=false&showActivities=false&showInactiveItems=false`, config).then((resp_data) => {
                     resolve(resp_data.data);
-                }).catch((e) => { throw e; });
+                }).catch((e) => { reject(e); });
             });
         });
     }
@@ -48,11 +48,14 @@ class OldOpenTickets extends WebsocketProvider_1.WebsocketProvider {
                     return ticket_created <= threshold;
                 });
                 resolve(old_tickets);
-            });
+            }, (e) => { reject(e); });
         });
     }
     do_work(data) {
-        return this.get_user_old_tickets(data);
+        if (this.work_data)
+            return new Promise(resolve => resolve(this.work_data));
+        else
+            return this.get_user_old_tickets(data);
     }
 }
 exports.OldOpenTickets = OldOpenTickets;
