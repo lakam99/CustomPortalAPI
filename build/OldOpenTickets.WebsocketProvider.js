@@ -57,5 +57,9 @@ class OldOpenTickets extends WebsocketProvider_1.WebsocketProvider {
         else
             return this.get_user_old_tickets(data);
     }
+    report_data({ data }) {
+        if (Array.isArray(data))
+            this.work_data = data;
+    }
 }
 exports.OldOpenTickets = OldOpenTickets;

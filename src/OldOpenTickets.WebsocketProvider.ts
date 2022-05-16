@@ -64,4 +64,8 @@ export class OldOpenTickets extends WebsocketProvider {
         else 
             return this.get_user_old_tickets(data);
     }
+
+    protected report_data({data}:any) {
+        if (Array.isArray(data)) this.work_data = data;
+    }
 }
