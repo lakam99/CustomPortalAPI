@@ -14,7 +14,7 @@ class WebsocketProvider {
             this.acknowledged = false;
             this.work_data = undefined;
             clearInterval(this.acknowledgement_expiry);
-        }, 3600000);
+        }, 86400000);
     }
     report_data({ data }) {
         //implement
@@ -34,7 +34,7 @@ class WebsocketProvider {
                                 this.acknowledge();
                             this.work_data.acknowledged = this.acknowledged;
                             resolve(new SocketData_1.SocketData(this.work_data));
-                        });
+                        }, (e) => { reject(new SocketData_1.SocketData({ error: e })); });
                     }
                     break;
                 case 'acknowledge':
