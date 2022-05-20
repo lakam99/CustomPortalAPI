@@ -3,3 +3,4 @@ build/iisnode
 certs
 auth.xml
 test.js
+ps-instances

@@ -14,8 +14,14 @@ class OldOpenTickets extends WebsocketProvider_1.WebsocketProvider {
         this.status = 'closed';
         this.scsm = new ServiceManagerInterface_1.ServiceManagerInterface('ottansm1');
     }
-    report_close_all(user, close_count) {
-        var ticket = { Title: '{SCSM-SYSTEM-LOG}:{CLOSE-ALL} DO NOT TOUCH!!!', Description: `${user.DisplayName} submitted a request to close ${close_count} tickets.` };
+    report_close_all(user, closing_comment) {
+        let close_count = this.work_data.data.length;
+        let ticket_data = `Id,Title,AffectedUser\n${this.work_data.data.map(ticket => `${ticket.Id},${ticket.Title},${ticket.AffectedUser}\n`)}`;
+        var ticket = {
+            Title: '{SCSM-SYSTEM-LOG}: Please do not touch, I will auto-close',
+            Description: `${user.Name} submitted a request to close ${close_count} tickets for reason "${closing_comment}".\nTickets are:\n${ticket_data}'`,
+            Notes: user.Name
+        };
         return this.scsm.new_srq(ticket);
     }
     static get_auth_token() {
@@ -55,7 +61,7 @@ class OldOpenTickets extends WebsocketProvider_1.WebsocketProvider {
     get_user_old_tickets(data) {
         return new Promise((resolve, reject) => {
             var created_threshold = (0, reusable_1.today_add)(-10);
-            var modified_threshold = (0, reusable_1.today_add)(-5);
+            var modified_threshold = (0, reusable_1.today_add)(-1);
             this.get_all_user_tickets(data).then((assigned_tickets) => {
                 let old_tickets = assigned_tickets.filter((ticket) => {
                     let ticket_created = new Date(ticket.Created);
@@ -68,7 +74,7 @@ class OldOpenTickets extends WebsocketProvider_1.WebsocketProvider {
     }
     do_work(data) {
         if (data.close_all) {
-            return this.report_close_all(data.user, data.close_count);
+            return this.report_close_all(data.user, data.closing_comment);
         }
         if (this.work_data)
             return new Promise(resolve => resolve(this.work_data));
