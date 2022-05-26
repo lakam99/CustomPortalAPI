@@ -7,20 +7,29 @@ const WebsocketProvider_1 = require("./WebsocketProvider");
 const request = require('request');
 var spawn = require('child_process').spawn;
 const path = require('path');
+var fs = require('fs');
 class OldOpenTickets extends WebsocketProvider_1.WebsocketProvider {
     constructor() {
         super('Old Open Tickets', null);
         this.name = 'Old Open Tickets';
         this.status = 'closed';
         this.scsm = new ServiceManagerInterface_1.ServiceManagerInterface('ottansm1');
+        OldOpenTickets.get_manager_emails().then((d) => this.mgmt_emails = d, (e) => { console.warn(e); });
+    }
+    static get_manager_emails() {
+        return new Promise((resolve, reject) => {
+            fs.readFile(path.join(__dirname, '/../management-emails.json'), 'utf8', (err, data) => {
+                err ? reject(err) : resolve(data);
+            });
+        });
     }
     report_close_all(user, closing_comment) {
         let close_count = this.work_data.data.length;
-        let ticket_data = `Id,Title,AffectedUser\n${this.work_data.data.map(ticket => `${ticket.Id},${ticket.Title},${ticket.AffectedUser}\n`)}`;
+        let formatted_data = this.work_data.data.map(ticket => `${ticket.Id},${ticket.Title},${ticket.AffectedUser}`);
         var ticket = {
             Title: '{SCSM-SYSTEM-LOG}: Please do not touch, I will auto-close',
-            Description: `${user.Name} submitted a request to close ${close_count} tickets for reason "${closing_comment}".\nTickets are:\n${ticket_data}'`,
-            Notes: user.Name
+            Description: `${user.Name} submitted a request to close ${close_count} tickets for reason "${closing_comment}".'`,
+            Notes: JSON.stringify({ user: user.Name, manager_emails: this.mgmt_emails, tickets: formatted_data })
         };
         return this.scsm.new_srq(ticket);
     }
@@ -46,15 +55,15 @@ class OldOpenTickets extends WebsocketProvider_1.WebsocketProvider {
                     headers: { "Authorization": `Token ${token}` },
                     url: (0, reusable_1.get_req_json)(url, json),
                 };
-                try {
-                    request.get(config, (e, r, resp_data) => {
+                request.get(config, (e, r, resp_data) => {
+                    try {
                         resp_data = JSON.parse(resp_data);
-                        e || r.statusCode >= 400 ? reject(e || resp_data.MessageDetail || resp_data) : resolve(resp_data);
-                    });
-                }
-                catch (e) {
-                    reject(e);
-                }
+                    }
+                    catch (e) {
+                        reject(e);
+                    }
+                    e || r.statusCode >= 400 ? reject(e || resp_data.MessageDetail || resp_data) : resolve(resp_data);
+                });
             });
         });
     }

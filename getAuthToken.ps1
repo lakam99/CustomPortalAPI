@@ -2,7 +2,7 @@ Set-Location $PSScriptRoot;
 try {
     $creds = Import-Clixml './auth.xml';
     $data = @{UserName=$creds.UserName;Password=($creds.getNetworkCredential().Password);LanguageCode='ENU'};
-    $url = "http://ottansm2/api/V3/Authorization/GetToken";
+    $url = "https://services/api/V3/Authorization/GetToken";
 
     $data = $data | ConvertTo-JSON;
 

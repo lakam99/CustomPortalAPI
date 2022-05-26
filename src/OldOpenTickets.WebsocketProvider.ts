@@ -4,6 +4,7 @@ import { WebsocketProvider } from "./WebsocketProvider";
 const request = require('request');
 var spawn = require('child_process').spawn;
 const path = require('path');
+var fs = require('fs');
 
 export class OldOpenTickets extends WebsocketProvider {
     client_connection: WebSocket;
@@ -11,21 +12,51 @@ export class OldOpenTickets extends WebsocketProvider {
     status = 'closed';
     portal_fetcher:any;
     scsm:ServiceManagerInterface;
+    mgmt_emails:Array<string>;
 
     constructor() {
         super('Old Open Tickets', null);
         this.scsm = new ServiceManagerInterface('ottansm1');
+        OldOpenTickets.get_manager_emails().then((d)=>this.mgmt_emails = d, (e)=>{console.warn(e)})
+    }
+
+    private static get_manager_emails():Promise<Array<string>> {
+        return new Promise((resolve,reject)=>{
+            fs.readFile(path.join(__dirname, '/../management-emails.json'),'utf8', (err,data)=>{
+                err ? reject(err) : resolve(data);
+            });
+        })   
+    }
+
+    private static send_email([To,...Cc]:Array<string>, Subject, Message) {
+        return new Promise(async (resolve,reject)=>{
+            var token = await OldOpenTickets.get_auth_token();
+            let url = 'https://services/EmailNotification/SendEmailNotification';
+            let json = {To, Cc, Subject, Message};
+            let config = {
+                headers: {"Authorization": `Token ${token}`},
+                url: url,
+                form: json
+            }
+            request.post(config, (e,r,resp_data)=>{
+                e || r.statusCode >= 400 ? reject(e || resp_data.MessageDetail || resp_data) : resolve(resp_data);
+            })
+        })
+    }
+
+    private report_close_all_to_manager(user, formatted_ticket_data):Promise<any> {
+        return new Promise(async (resolve,reject)=>{
+            var managers = await OldOpenTickets.get_manager_emails();
+            let subject = `${user.Name} closed ${formatted_ticket_data.length} tickets.`;
+            let msg_body = `The tickets closed are:\n${formatted_ticket_data}`;
+            await OldOpenTickets.send_email(managers, subject, msg_body);
+        })
     }
 
     private report_close_all(user, closing_comment) {
         let close_count = this.work_data.data.length;
-        let ticket_data = `Id,Title,AffectedUser\n${this.work_data.data.map(ticket => `${ticket.Id},${ticket.Title},${ticket.AffectedUser}\n`)}`;
-        var ticket = {
-            Title: '{SCSM-SYSTEM-LOG}: Please do not touch, I will auto-close',
-            Description: `${user.Name} submitted a request to close ${close_count} tickets for reason "${closing_comment}".\nTickets are:\n${ticket_data}'`,
-            Notes: user.Name
-        };
-        return this.scsm.new_srq(ticket);
+        let formatted_data = this.work_data.data.map(ticket => `${ticket.Id},${ticket.Title},${ticket.AffectedUser}`);
+        
     }
 
     private static get_auth_token() {
@@ -51,14 +82,14 @@ export class OldOpenTickets extends WebsocketProvider {
                     headers: {"Authorization": `Token ${token}`},
                     url: get_req_json(url, json),
                 }
-                try {
-                    request.get(config, (e, r, resp_data)=>{
+                request.get(config, (e, r, resp_data)=>{
+                    try {
                         resp_data = JSON.parse(resp_data);
-                        e || r.statusCode >= 400 ? reject(e || resp_data.MessageDetail || resp_data) : resolve(resp_data);
-                    })
-                } catch(e) {
-                    reject(e);
-                }
+                    } catch (e) {
+                        reject(e);
+                    }
+                    e || r.statusCode >= 400 ? reject(e || resp_data.MessageDetail || resp_data) : resolve(resp_data);
+                })
             })
         });
     }
