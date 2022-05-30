@@ -1,3 +1,5 @@
+var spawn = require('child_process').spawn;
+
 export function sanitize_string(str) {
     var clean = new RegExp(/["\*\d,;{}\[\]!@#$%\^&\(\)/\\\\]/g);
     return str.replace(clean,'');
@@ -19,4 +21,14 @@ export function UUID() {
         return (c=='x' ? r :(r&0x3|0x8)).toString(16);
     });
     return uuid;
+}
+
+export function runPowershellScript(script_path:string):Promise<string> {
+    return new Promise((resolve)=>{
+        var child = spawn("powershell.exe", [script_path]);
+        child.stdout.once('data', (data)=>{
+            data = data.toString('utf-8');
+            resolve(data);
+        })
+    })
 }

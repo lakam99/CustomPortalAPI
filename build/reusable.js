@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UUID = exports.get_req_json = exports.today_add = exports.sanitize_string = void 0;
+exports.runPowershellScript = exports.UUID = exports.get_req_json = exports.today_add = exports.sanitize_string = void 0;
+var spawn = require('child_process').spawn;
 function sanitize_string(str) {
     var clean = new RegExp(/["\*\d,;{}\[\]!@#$%\^&\(\)/\\\\]/g);
     return str.replace(clean, '');
@@ -24,3 +25,13 @@ function UUID() {
     return uuid;
 }
 exports.UUID = UUID;
+function runPowershellScript(script_path) {
+    return new Promise((resolve) => {
+        var child = spawn("powershell.exe", [script_path]);
+        child.stdout.once('data', (data) => {
+            data = data.toString('utf-8');
+            resolve(data);
+        });
+    });
+}
+exports.runPowershellScript = runPowershellScript;

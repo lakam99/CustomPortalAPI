@@ -10,7 +10,7 @@ class TemplateManager {
         try {
             this.cache = DBManager_1.primaryDB.get(this.dbname);
         }
-        catch (_a) {
+        catch {
             this.cache = { templateData: {} };
             this.writeDB();
         }
@@ -29,7 +29,7 @@ class TemplateManager {
             try {
                 res.send(`${JSON.stringify(this.get_user_template(username))}`);
             }
-            catch (_a) {
+            catch {
                 res.sendStatus(404);
             }
         }

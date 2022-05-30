@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OldOpenTickets = void 0;
+const EmailManager_1 = require("./EmailManager");
 const reusable_1 = require("./reusable");
 const ServiceManagerInterface_1 = require("./ServiceManagerInterface");
 const WebsocketProvider_1 = require("./WebsocketProvider");
 const request = require('request');
-var spawn = require('child_process').spawn;
 const path = require('path');
 var fs = require('fs');
 class OldOpenTickets extends WebsocketProvider_1.WebsocketProvider {
@@ -19,32 +19,45 @@ class OldOpenTickets extends WebsocketProvider_1.WebsocketProvider {
     static get_manager_emails() {
         return new Promise((resolve, reject) => {
             fs.readFile(path.join(__dirname, '/../management-emails.json'), 'utf8', (err, data) => {
-                err ? reject(err) : resolve(data);
+                err ? reject(err) : resolve(JSON.parse(data));
             });
+        });
+    }
+    static async send_email([To, ...Cc], Subject, Message) {
+        return await EmailManager_1.EmailManager.send_email(To, Subject, Message);
+    }
+    report_close_all_to_manager(user, formatted_ticket_data, closing_comment) {
+        return new Promise(async (resolve, reject) => {
+            var managers = await OldOpenTickets.get_manager_emails();
+            let subject = `${user.Name} closed ${formatted_ticket_data.length} tickets.`;
+            let msg_body = `${user.Name} ticket closing reason:${closing_comment}<p></p><p></p>The tickets closed are:<p></p>${formatted_ticket_data}`;
+            resolve(await OldOpenTickets.send_email(managers, subject, msg_body));
         });
     }
     report_close_all(user, closing_comment) {
-        let close_count = this.work_data.data.length;
-        let formatted_data = this.work_data.data.map(ticket => `${ticket.Id},${ticket.Title},${ticket.AffectedUser}`);
-        var ticket = {
-            Title: '{SCSM-SYSTEM-LOG}: Please do not touch, I will auto-close',
-            Description: `${user.Name} submitted a request to close ${close_count} tickets for reason "${closing_comment}".'`,
-            Notes: JSON.stringify({ user: user.Name, manager_emails: this.mgmt_emails, tickets: formatted_data })
-        };
-        return this.scsm.new_srq(ticket);
+        let formatted_data = `
+            <table>
+                <th>
+                    <tr>Id</tr>
+                    <tr>Title</tr>
+                    <tr>AffectedUser</tr>
+                </th>
+                <tbody>
+        `;
+        formatted_data += this.work_data.data.map(ticket => {
+            `
+            <tr>
+                <td>${ticket.Id}</td>
+                <td>${ticket.Title}</td>
+                <td>${ticket.AffectedUser}</td>
+            </tr>
+        `;
+        }).join('') + '<tbody/></table>';
+        return this.report_close_all_to_manager(user, formatted_data, closing_comment);
     }
-    static get_auth_token() {
-        return new Promise((resolve, reject) => {
-            var child = spawn("powershell.exe", [path.join(__dirname + '/../getAuthToken.ps1')]);
-            child.stdout.once('data', (data) => {
-                data = data.toString('utf-8');
-                if (data != 'flopped') {
-                    resolve(data.replaceAll('"', ''));
-                }
-                else
-                    reject(data);
-            });
-        });
+    static async get_auth_token() {
+        let data = await (0, reusable_1.runPowershellScript)(path.join(__dirname + '/../getAuthToken.ps1'));
+        return data.replaceAll('"', '');
     }
     get_all_user_tickets(data) {
         return new Promise((resolve, reject) => {
@@ -70,7 +83,7 @@ class OldOpenTickets extends WebsocketProvider_1.WebsocketProvider {
     get_user_old_tickets(data) {
         return new Promise((resolve, reject) => {
             var created_threshold = (0, reusable_1.today_add)(-10);
-            var modified_threshold = (0, reusable_1.today_add)(-1);
+            var modified_threshold = (0, reusable_1.today_add)(0);
             this.get_all_user_tickets(data).then((assigned_tickets) => {
                 let old_tickets = assigned_tickets.filter((ticket) => {
                     let ticket_created = new Date(ticket.Created);
@@ -78,13 +91,12 @@ class OldOpenTickets extends WebsocketProvider_1.WebsocketProvider {
                     return ticket_created <= created_threshold && ticket_modified <= modified_threshold;
                 });
                 resolve(old_tickets);
-            }, (e) => { reject(e); });
+            }, (e) => { reject("Failed to retrieve authentication token."); });
         });
     }
     do_work(data) {
-        if (data.close_all) {
+        if (data.close_all)
             return this.report_close_all(data.user, data.closing_comment);
-        }
         if (this.work_data)
             return new Promise(resolve => resolve(this.work_data));
         else

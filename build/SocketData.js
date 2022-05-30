@@ -10,7 +10,7 @@ class SocketData extends Object {
         try {
             var parsed_data = JSON.parse(data);
         }
-        catch (_a) {
+        catch {
             return false;
         }
         return new SocketData(parsed_data);

@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HomeUpdateManager = void 0;
 const ArkamAPICall_1 = require("./ArkamAPICall");
@@ -23,7 +14,7 @@ class HomeUpdateManager {
         try {
             this.cache = DBManager_1.primaryDB.get(this.dbname);
         }
-        catch (_a) {
+        catch {
             this.cache = { updates: [] };
             this.writeDB();
         }
@@ -79,24 +70,22 @@ class HomeUpdateManager {
             })
         ];
     }
-    account_for_expired_updates() {
-        return __awaiter(this, void 0, void 0, function* () {
-            let updates = this.get_updates();
-            let now = new Date().getTime();
-            let del = [];
-            updates.forEach((update) => {
-                if (new Date(update.expiry_date).getTime() <= now) {
-                    del.push(update);
-                }
-            });
-            del.forEach((del_update) => {
-                let i = updates.indexOf(del_update);
-                updates.splice(i, 1);
-            });
-            if (del.length) {
-                this.set_updates(HomeUpdate_1.HomeUpdate.fromArray(updates));
+    async account_for_expired_updates() {
+        let updates = this.get_updates();
+        let now = new Date().getTime();
+        let del = [];
+        updates.forEach((update) => {
+            if (new Date(update.expiry_date).getTime() <= now) {
+                del.push(update);
             }
         });
+        del.forEach((del_update) => {
+            let i = updates.indexOf(del_update);
+            updates.splice(i, 1);
+        });
+        if (del.length) {
+            this.set_updates(HomeUpdate_1.HomeUpdate.fromArray(updates));
+        }
     }
     writeDB() {
         DBManager_1.primaryDB.put(this.dbname, this.cache);
