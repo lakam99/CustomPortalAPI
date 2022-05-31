@@ -1,7 +1,8 @@
 import { EmailManager } from "./EmailManager";
 import { get_req_json, runPowershellScript, today_add } from "./reusable";
-import { ServiceManagerInterface } from "./ServiceManagerInterface";
 import { WebsocketProvider } from "./WebsocketProvider";
+
+const Handlebars = require('handlebars');
 const request = require('request');
 const path = require('path');
 var fs = require('fs');
@@ -11,56 +12,42 @@ export class OldOpenTickets extends WebsocketProvider {
     name = 'Old Open Tickets';
     status = 'closed';
     portal_fetcher:any;
-    scsm:ServiceManagerInterface;
     mgmt_emails:Array<string>;
 
     constructor() {
         super('Old Open Tickets', null);
-        this.scsm = new ServiceManagerInterface('ottansm1');
-        OldOpenTickets.get_manager_emails().then((d)=>this.mgmt_emails = d, (e)=>{console.warn(e)})
+        this.get_manager_emails();
     }
 
-    private static get_manager_emails():Promise<Array<string>> {
-        return new Promise((resolve,reject)=>{
-            fs.readFile(path.join(__dirname, '/../management-emails.json'),'utf8', (err,data)=>{
-                err ? reject(err) : resolve(JSON.parse(data));
-            });
-        })   
+    private async get_manager_emails(){
+        this.mgmt_emails = JSON.parse(fs.readFileSync(path.join(__dirname, '/../management-emails.json'),'utf8'));
     }
-
-    private static async send_email([To,...Cc]:Array<string>, Subject, Message) {
+    
+    private static async send_email(To:Array<string>, Subject, Message) {
         return await EmailManager.send_email(To, Subject, Message);
     }
 
-    private report_close_all_to_manager(user, formatted_ticket_data, closing_comment):Promise<any> {
+    private report_close_all_to_manager(user, formatted_ticket_data):Promise<any> {
         return new Promise(async (resolve,reject)=>{
-            var managers = await OldOpenTickets.get_manager_emails();
-            let subject = `${user.Name} closed ${formatted_ticket_data.length} tickets.`;
-            let msg_body = `${user.Name} ticket closing reason:${closing_comment}<p></p><p></p>The tickets closed are:<p></p>${formatted_ticket_data}`;
-            resolve(await OldOpenTickets.send_email(managers, subject, msg_body));
+            var managers = this.mgmt_emails;
+            let subject = `${user.Name} closed ${this.work_data.data.length} tickets.`;
+            resolve(await OldOpenTickets.send_email(managers, subject, formatted_ticket_data));
         })
     }
 
+    private create_close_notification_html(user, reason) {
+        var html_template = EmailManager.get_template_for('close-ticket-notification');
+        var {table} = html_template;
+        var tickets = this.work_data.data;
+        var table_template = Handlebars.compile(table);
+        var table_data = {user: user.Name, ticket_count:tickets.length, reason, ticket_data: tickets};
+        var table_html = table_template(table_data);
+        return table_html;
+    }
+
     private report_close_all(user, closing_comment) {
-        let formatted_data = `
-            <table>
-                <th>
-                    <tr>Id</tr>
-                    <tr>Title</tr>
-                    <tr>AffectedUser</tr>
-                </th>
-                <tbody>
-        `;
-    
-        formatted_data += this.work_data.data.map(ticket => {
-            `
-            <tr>
-                <td>${ticket.Id}</td>
-                <td>${ticket.Title}</td>
-                <td>${ticket.AffectedUser}</td>
-            </tr>
-        `}).join('') + '<tbody/></table>';
-        return this.report_close_all_to_manager(user, formatted_data, closing_comment);
+        var formatted_data = this.create_close_notification_html(user, closing_comment);
+        return this.report_close_all_to_manager(user, formatted_data);
     }
 
     private static async get_auth_token() {
