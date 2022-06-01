@@ -30,6 +30,18 @@ exports.EmailManager = {
             });
         });
     },
+    get_template_for(_for) {
+        return exports.EmailManager.templates.filter(template => template.for == _for)[0];
+    },
+    get_templates: async () => {
+        exports.EmailManager.templates = JSON.parse(fs.readFileSync(path.join(__dirname, '/../templates/config.json')));
+        exports.EmailManager.templates.forEach((template) => {
+            Object.keys(template).forEach(async (key) => {
+                if (key != 'for')
+                    template[key] = fs.readFileSync(path.join(__dirname, template[key]), 'utf8');
+            });
+        });
+    },
     send_email: (to, subject, html, from = 'supportcentral-soutiencentral@nserc-crsng.gc.ca') => {
         return exports.EmailManager.transporter.sendMail({ from, to, subject, html });
     }
