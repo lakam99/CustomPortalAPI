@@ -1,0 +1,6 @@
+{
+    "host": "mail.nserc.ca",
+    "port": 25,
+    "secure": false,
+    "tls": { "secureProtocol": "TLSv1_method", "rejectUnauthorized": false }
+}

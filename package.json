@@ -2,8 +2,8 @@
   "name": "arkamportalapi",
   "version": "1.0.0",
   "description": "",
-  "main": "build/ArkamPortalAPI.js",
-  "bin": "build/ArkamPortalAPI.js",
+  "main": "build/CustomPortalAPI.js",
+  "bin": "build/CustomPortalAPI.js",
   "pkg": {
     "assets": [
       "node_modules/**/*",
@@ -15,7 +15,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node build/ArkamPortalAPI.js"
+    "start": "node build/CustomPortalAPI.js"
   },
   "author": "Arkam Mazrui",
   "license": "ISC",
@@ -24,6 +24,7 @@
     "body-parser": "^1.19.1",
     "express": "^4.17.2",
     "express-ntlm": "^2.6.1",
+    "handlebars": "^4.7.7",
     "nodemailer": "^6.7.5",
     "request": "^2.88.2",
     "ws": "^8.6.0"

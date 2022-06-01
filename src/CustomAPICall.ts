@@ -1,9 +1,9 @@
-export const ARKAM_API_METHODS = {
+export const CUSTOM_API_METHODS = {
     post: 1,
     get: 2
 };
 
-export class ArkamAPICall {
+export class CustomAPICall {
     private method: Number;
     private name: String;
     private callback: Function;

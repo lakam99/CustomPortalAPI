@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ArkamPortalAPI = void 0;
+exports.CustomPortalAPI = void 0;
 const express = require('express');
 var parser = require('body-parser');
 var path = require('path');
@@ -8,10 +8,10 @@ var ntlm = require('express-ntlm');
 const fs = require('fs');
 const https = require('https');
 const WebSockets = require('ws');
-const ArkamAPICall_1 = require("./ArkamAPICall");
+const CustomAPICall_1 = require("./CustomAPICall");
 const HomeUpdateManager_1 = require("./HomeUpdateManager");
 const SocketManager_1 = require("./SocketManager");
-class ArkamPortalAPI {
+class CustomPortalAPI {
     constructor() {
         this.api = express();
         this.port = process.env.port || 5000;
@@ -36,11 +36,11 @@ class ArkamPortalAPI {
     }
     init_api_server() {
         this.api.options('*', (req, res, next) => {
-            res = ArkamPortalAPI.setHeaders(res);
+            res = CustomPortalAPI.setHeaders(res);
             res.sendStatus(200);
         });
         this.api.use((req, res, next) => {
-            res = ArkamPortalAPI.setHeaders(res);
+            res = CustomPortalAPI.setHeaders(res);
             next();
         });
         this.api.use(parser.json());
@@ -68,7 +68,7 @@ class ArkamPortalAPI {
         return res;
     }
     registerAPI(new_api) {
-        if (new_api.get_method() == ArkamAPICall_1.ARKAM_API_METHODS.get) {
+        if (new_api.get_method() == CustomAPICall_1.CUSTOM_API_METHODS.get) {
             this.api.get(new_api.get_name(), new_api.get_callback());
         }
         else {
@@ -81,5 +81,5 @@ class ArkamPortalAPI {
         });
     }
 }
-exports.ArkamPortalAPI = ArkamPortalAPI;
-const arkamPortalAPI = new ArkamPortalAPI();
+exports.CustomPortalAPI = CustomPortalAPI;
+const arkamPortalAPI = new CustomPortalAPI();

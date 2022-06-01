@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HomeUpdateManager = void 0;
-const ArkamAPICall_1 = require("./ArkamAPICall");
+const CustomAPICall_1 = require("./CustomAPICall");
 const DBManager_1 = require("./DBManager");
 const HomeUpdate_1 = require("./HomeUpdate");
 const AuthenticatedUser_1 = require("./AuthenticatedUser");
@@ -47,10 +47,10 @@ class HomeUpdateManager {
     }
     getAPICalls() {
         return [
-            new ArkamAPICall_1.ArkamAPICall(ArkamAPICall_1.ARKAM_API_METHODS.get, '/home-update', (req, res) => { this.get_updates_call(req, res); }),
-            new ArkamAPICall_1.ArkamAPICall(ArkamAPICall_1.ARKAM_API_METHODS.post, '/home-update/write', (req, res) => { this.write_updates_call(req, res); }),
-            new ArkamAPICall_1.ArkamAPICall(ArkamAPICall_1.ARKAM_API_METHODS.get, '/auth-users', (req, res) => { res.sendFile(path.resolve(__dirname + "/../databases/auth-users.json")); }),
-            new ArkamAPICall_1.ArkamAPICall(ArkamAPICall_1.ARKAM_API_METHODS.get, '/home-update/new-template', (req, res) => {
+            new CustomAPICall_1.CustomAPICall(CustomAPICall_1.CUSTOM_API_METHODS.get, '/home-update', (req, res) => { this.get_updates_call(req, res); }),
+            new CustomAPICall_1.CustomAPICall(CustomAPICall_1.CUSTOM_API_METHODS.post, '/home-update/write', (req, res) => { this.write_updates_call(req, res); }),
+            new CustomAPICall_1.CustomAPICall(CustomAPICall_1.CUSTOM_API_METHODS.get, '/auth-users', (req, res) => { res.sendFile(path.resolve(__dirname + "/../databases/auth-users.json")); }),
+            new CustomAPICall_1.CustomAPICall(CustomAPICall_1.CUSTOM_API_METHODS.get, '/home-update/new-template', (req, res) => {
                 res.send(`
                 <div class="col-sm-4">
                   <div class="accordion" id='item-x'>

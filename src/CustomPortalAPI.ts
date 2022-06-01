@@ -6,12 +6,12 @@ const fs = require('fs');
 const https = require('https');
 const WebSockets = require('ws');
 
-import {ArkamAPICall, ARKAM_API_METHODS} from './ArkamAPICall';
+import {CustomAPICall, CUSTOM_API_METHODS} from './CustomAPICall';
 import { HomeUpdateManager } from './HomeUpdateManager';
 import { SocketManager } from './SocketManager';
 import { TemplateManager } from './TemplateManager';
 
-export class ArkamPortalAPI {
+export class CustomPortalAPI {
     api = express();
     port = process.env.port || 5000;
     ldap_path = "/../databases/ldap-control.json";
@@ -50,12 +50,12 @@ export class ArkamPortalAPI {
 
     private init_api_server() {
         this.api.options('*',(req, res,next)=>{
-            res = ArkamPortalAPI.setHeaders(res);
+            res = CustomPortalAPI.setHeaders(res);
             res.sendStatus(200);
         });
 
         this.api.use((req, res, next)=> {
-            res = ArkamPortalAPI.setHeaders(res);
+            res = CustomPortalAPI.setHeaders(res);
             next();
         });
 
@@ -89,19 +89,19 @@ export class ArkamPortalAPI {
         return res;
     }
 
-    registerAPI(new_api:ArkamAPICall) {
-        if (new_api.get_method() == ARKAM_API_METHODS.get) {
+    registerAPI(new_api:CustomAPICall) {
+        if (new_api.get_method() == CUSTOM_API_METHODS.get) {
             this.api.get(new_api.get_name(), new_api.get_callback());
         } else {
             this.api.post(new_api.get_name(), parser.urlencoded({ extended: true }), new_api.get_callback());
         }
     }
 
-    registerAPICalls(calls:Array<ArkamAPICall>) {
+    registerAPICalls(calls:Array<CustomAPICall>) {
         calls.forEach((call)=>{
             this.registerAPI(call);
         })
     }
 }
 
-const arkamPortalAPI = new ArkamPortalAPI();
+const arkamPortalAPI = new CustomPortalAPI();

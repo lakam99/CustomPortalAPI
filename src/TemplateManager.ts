@@ -1,14 +1,14 @@
 import { primaryDB } from './DBManager';
-import { ArkamAPICall, ARKAM_API_METHODS } from './ArkamAPICall';
-import { ArkamPortalAPI } from './ArkamPortalAPI';
+import { CustomAPICall, CUSTOM_API_METHODS } from './CustomAPICall';
+import { CustomPortalAPI } from './CustomPortalAPI';
 
 export class TemplateManager {
     cache:any;
     dbname="templates";
-    calls:Array<ArkamAPICall>;
-    private portalAPI:ArkamPortalAPI;
+    calls:Array<CustomAPICall>;
+    private portalAPI:CustomPortalAPI;
 
-    constructor(apiInstance:ArkamPortalAPI) {
+    constructor(apiInstance:CustomPortalAPI) {
         this.portalAPI = apiInstance;
         try {
             this.cache = primaryDB.get(this.dbname);
@@ -18,8 +18,8 @@ export class TemplateManager {
         }
 
         this.calls = [
-            new ArkamAPICall(ARKAM_API_METHODS.get,'/template', (req,res)=>{this.get_template_call(req,res)}),
-            new ArkamAPICall(ARKAM_API_METHODS.post, '/template/write', (req,res)=>{this.write_template_call(req,res)})
+            new CustomAPICall(CUSTOM_API_METHODS.get,'/template', (req,res)=>{this.get_template_call(req,res)}),
+            new CustomAPICall(CUSTOM_API_METHODS.post, '/template/write', (req,res)=>{this.write_template_call(req,res)})
         ]
 
         this.portalAPI.registerAPICalls(this.calls);

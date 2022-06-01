@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TemplateManager = void 0;
 const DBManager_1 = require("./DBManager");
-const ArkamAPICall_1 = require("./ArkamAPICall");
+const CustomAPICall_1 = require("./CustomAPICall");
 class TemplateManager {
     constructor(apiInstance) {
         this.dbname = "templates";
@@ -15,8 +15,8 @@ class TemplateManager {
             this.writeDB();
         }
         this.calls = [
-            new ArkamAPICall_1.ArkamAPICall(ArkamAPICall_1.ARKAM_API_METHODS.get, '/template', (req, res) => { this.get_template_call(req, res); }),
-            new ArkamAPICall_1.ArkamAPICall(ArkamAPICall_1.ARKAM_API_METHODS.post, '/template/write', (req, res) => { this.write_template_call(req, res); })
+            new CustomAPICall_1.CustomAPICall(CustomAPICall_1.CUSTOM_API_METHODS.get, '/template', (req, res) => { this.get_template_call(req, res); }),
+            new CustomAPICall_1.CustomAPICall(CustomAPICall_1.CUSTOM_API_METHODS.post, '/template/write', (req, res) => { this.write_template_call(req, res); })
         ];
         this.portalAPI.registerAPICalls(this.calls);
     }

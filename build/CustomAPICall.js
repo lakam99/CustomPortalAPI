@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ArkamAPICall = exports.ARKAM_API_METHODS = void 0;
-exports.ARKAM_API_METHODS = {
+exports.CustomAPICall = exports.CUSTOM_API_METHODS = void 0;
+exports.CUSTOM_API_METHODS = {
     post: 1,
     get: 2
 };
-class ArkamAPICall {
+class CustomAPICall {
     constructor(method, name, callback) {
         if (method > 0 && method < 3) {
             this.method = method;
@@ -26,4 +26,4 @@ class ArkamAPICall {
         return this.callback;
     }
 }
-exports.ArkamAPICall = ArkamAPICall;
+exports.CustomAPICall = CustomAPICall;

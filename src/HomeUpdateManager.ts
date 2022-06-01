@@ -1,5 +1,5 @@
-import { ArkamAPICall, ARKAM_API_METHODS } from "./ArkamAPICall";
-import { ArkamPortalAPI } from "./ArkamPortalAPI";
+import { CustomAPICall, CUSTOM_API_METHODS } from "./CustomAPICall";
+import { CustomPortalAPI } from "./CustomPortalAPI";
 import { primaryDB } from "./DBManager";
 import { HomeUpdate } from "./HomeUpdate";
 import {AuthenticatedUser, authUsersPath} from "./AuthenticatedUser";
@@ -8,13 +8,13 @@ var path = require('path');
 export class HomeUpdateManager {
     private cache: any;
     private dbname='home-updates';
-    private portalAPI:ArkamPortalAPI;
-    private calls:Array<ArkamAPICall>;
+    private portalAPI:CustomPortalAPI;
+    private calls:Array<CustomAPICall>;
     private expiryAccountant:any;
     private expiryCheck=3600000; //ms
     private authenticatedUsers:Array<AuthenticatedUser>;
 
-    constructor(apiInstance:ArkamPortalAPI) {
+    constructor(apiInstance:CustomPortalAPI) {
         this.portalAPI = apiInstance;
         try {
             this.cache = primaryDB.get(this.dbname);
@@ -52,12 +52,12 @@ export class HomeUpdateManager {
         return false;
     }
 
-    private getAPICalls():Array<ArkamAPICall> {
+    private getAPICalls():Array<CustomAPICall> {
         return [
-            new ArkamAPICall(ARKAM_API_METHODS.get, '/home-update', (req,res)=>{this.get_updates_call(req, res)}),
-            new ArkamAPICall(ARKAM_API_METHODS.post, '/home-update/write', (req,res)=>{this.write_updates_call(req, res)}),
-            new ArkamAPICall(ARKAM_API_METHODS.get, '/auth-users', (req,res)=>{res.sendFile(path.resolve(__dirname + "/../databases/auth-users.json"))}),
-            new ArkamAPICall(ARKAM_API_METHODS.get, '/home-update/new-template', (req,res)=>{
+            new CustomAPICall(CUSTOM_API_METHODS.get, '/home-update', (req,res)=>{this.get_updates_call(req, res)}),
+            new CustomAPICall(CUSTOM_API_METHODS.post, '/home-update/write', (req,res)=>{this.write_updates_call(req, res)}),
+            new CustomAPICall(CUSTOM_API_METHODS.get, '/auth-users', (req,res)=>{res.sendFile(path.resolve(__dirname + "/../databases/auth-users.json"))}),
+            new CustomAPICall(CUSTOM_API_METHODS.get, '/home-update/new-template', (req,res)=>{
                 res.send(`
                 <div class="col-sm-4">
                   <div class="accordion" id='item-x'>
