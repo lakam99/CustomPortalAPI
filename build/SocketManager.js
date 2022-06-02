@@ -10,6 +10,7 @@ exports.PREMADE_RESPONSES = {
     setup: new SocketData_1.SocketData({ controller_needed: true }),
     no_operator: new SocketData_1.SocketData({ error: 'You must provide a valid operator.' }),
     json_required: new SocketData_1.SocketData({ error: 'You must provide json data.' }),
+    no_user_id: new SocketData_1.SocketData({ error: 'No "user" param with user id was provided.' }),
     provider_accept: new SocketData_1.SocketData({ accepted: true, message: 'The provider has accepted your connection.' }),
     ok: new SocketData_1.SocketData({ ok: true })
 };
@@ -25,13 +26,15 @@ class SocketManager {
         client.send(response.toString());
         client.close();
     }
-    match_connection(client_connection, provider) {
+    match_connection(client_connection, provider, user_id) {
         return this.active_connections.filter((active_connection) => {
-            return active_connection.provider.name == provider.name && active_connection.IP == client_connection['_socket'].remoteAddress;
+            return active_connection.provider.name == provider.name
+                && active_connection.IP == client_connection['_socket'].remoteAddress
+                && active_connection.user_id == user_id;
         });
     }
-    do_if_client_reconnecting_to_provider(client_connection, provider) {
-        var matches = this.match_connection(client_connection, provider);
+    do_if_client_reconnecting_to_provider(client_connection, provider, user_id) {
+        var matches = this.match_connection(client_connection, provider, user_id);
         if (matches.length) {
             var match = matches.length > 1 ? matches[matches.length - 1] : matches[0];
             match.reconnect(client_connection);
@@ -44,11 +47,13 @@ class SocketManager {
     }
     introduce_connection_to_provider(client_connection, parsed) {
         let provider = this.get_provider_by_name(parsed['provider']);
-        if (!provider) {
+        let user_id = parsed['user'];
+        if (!provider)
             SocketManager.send_err_response(client_connection, exports.PREMADE_RESPONSES.no_operator);
-        }
-        else if (!this.do_if_client_reconnecting_to_provider(client_connection, provider)) {
-            this.active_connections.push(new WebsocketInterface_1.WebSocketInterface(client_connection, new provider.classType()));
+        else if (!user_id)
+            SocketManager.send_err_response(client_connection, exports.PREMADE_RESPONSES.no_user_id);
+        else if (!this.do_if_client_reconnecting_to_provider(client_connection, provider, user_id)) {
+            this.active_connections.push(new WebsocketInterface_1.WebSocketInterface(client_connection, new provider.classType(), user_id));
             client_connection.send(exports.PREMADE_RESPONSES.provider_accept.toString());
         }
     }

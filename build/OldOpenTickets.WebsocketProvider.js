@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OldOpenTickets = void 0;
+const ConfigManager_1 = require("./ConfigManager");
 const EmailManager_1 = require("./EmailManager");
 const reusable_1 = require("./reusable");
 const WebsocketProvider_1 = require("./WebsocketProvider");
@@ -8,15 +9,20 @@ const Handlebars = require('handlebars');
 const request = require('request');
 const path = require('path');
 var fs = require('fs');
+(async () => { fs.readFileSync(path.join(__dirname)); });
 class OldOpenTickets extends WebsocketProvider_1.WebsocketProvider {
     constructor() {
         super('Old Open Tickets', null);
         this.name = 'Old Open Tickets';
         this.status = 'closed';
+        this.get_time_criteria_config();
         this.get_manager_emails();
     }
     async get_manager_emails() {
-        this.mgmt_emails = JSON.parse(fs.readFileSync(path.join(__dirname, '/../management-emails.json'), 'utf8'));
+        this.mgmt_emails = await ConfigManager_1.ConfigManager.get('Management-Emails');
+    }
+    async get_time_criteria_config() {
+        this.time_config = await ConfigManager_1.ConfigManager.get('Old-Ticket-Config');
     }
     static async send_email(To, Subject, Message) {
         return await EmailManager_1.EmailManager.send_email(To, Subject, Message);
@@ -68,8 +74,8 @@ class OldOpenTickets extends WebsocketProvider_1.WebsocketProvider {
     }
     get_user_old_tickets(data) {
         return new Promise((resolve, reject) => {
-            var created_threshold = (0, reusable_1.today_add)(-10);
-            var modified_threshold = (0, reusable_1.today_add)(0);
+            var created_threshold = (0, reusable_1.today_add)(this.time_config.created_threshold);
+            var modified_threshold = (0, reusable_1.today_add)(this.time_config.modified_threshold);
             this.get_all_user_tickets(data).then((assigned_tickets) => {
                 let old_tickets = assigned_tickets.filter((ticket) => {
                     let ticket_created = new Date(ticket.Created);

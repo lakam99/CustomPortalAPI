@@ -7,9 +7,10 @@ export class WebSocketInterface {
     provider:WebsocketProvider;
     data_queue: Array<SocketData>;
     IP: any;
+    user_id:string;
 
-    constructor(connection:WebSocket, provider:WebsocketProvider) {
-        Object.assign(this, {connection, provider});
+    constructor(connection:WebSocket, provider:WebsocketProvider, user_id:string) {
+        Object.assign(this, {connection, provider, user_id});
         this.data_queue = [];
         this.IP = this.connection['_socket'].remoteAddress;
     }

@@ -1,0 +1,14 @@
+[
+    {
+        "name": "Email-Manager-Config",
+        "path": "/../configs/emailManagerConfig.json"
+    },
+    {
+        "name": "Management-Emails",
+        "path": "/../configs/management-emails.json"
+    },
+    {
+        "name": "Old-Ticket-Config",
+        "path": "/../configs/old-ticket-config.json"
+    }
+]

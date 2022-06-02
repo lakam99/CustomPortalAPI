@@ -1,3 +1,4 @@
+import { ConfigManager } from "./ConfigManager";
 import { EmailManager } from "./EmailManager";
 import { get_req_json, runPowershellScript, today_add } from "./reusable";
 import { WebsocketProvider } from "./WebsocketProvider";
@@ -6,6 +7,7 @@ const Handlebars = require('handlebars');
 const request = require('request');
 const path = require('path');
 var fs = require('fs');
+(async() =>{fs.readFileSync(path.join(__dirname, ))})
 
 export class OldOpenTickets extends WebsocketProvider {
     client_connection: WebSocket;
@@ -13,14 +15,20 @@ export class OldOpenTickets extends WebsocketProvider {
     status = 'closed';
     portal_fetcher:any;
     mgmt_emails:Array<string>;
+    time_config:any;
 
     constructor() {
         super('Old Open Tickets', null);
+        this.get_time_criteria_config();
         this.get_manager_emails();
     }
 
     private async get_manager_emails(){
-        this.mgmt_emails = JSON.parse(fs.readFileSync(path.join(__dirname, '/../management-emails.json'),'utf8'));
+        this.mgmt_emails = await ConfigManager.get('Management-Emails');
+    }
+
+    private async get_time_criteria_config() {
+        this.time_config = await ConfigManager.get('Old-Ticket-Config');
     }
     
     private static async send_email(To:Array<string>, Subject, Message) {
@@ -78,8 +86,8 @@ export class OldOpenTickets extends WebsocketProvider {
 
     get_user_old_tickets(data) {
         return new Promise((resolve,reject)=>{
-            var created_threshold = today_add(-10);
-            var modified_threshold = today_add(0);
+            var created_threshold = today_add(this.time_config.created_threshold);
+            var modified_threshold = today_add(this.time_config.modified_threshold);
             this.get_all_user_tickets(data).then((assigned_tickets)=>{
                 let old_tickets = assigned_tickets.filter((ticket)=>{
                     let ticket_created = new Date(ticket.Created);

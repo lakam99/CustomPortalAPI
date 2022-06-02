@@ -4,8 +4,8 @@ exports.WebSocketInterface = void 0;
 const SocketData_1 = require("./SocketData");
 const SocketManager_1 = require("./SocketManager");
 class WebSocketInterface {
-    constructor(connection, provider) {
-        Object.assign(this, { connection, provider });
+    constructor(connection, provider, user_id) {
+        Object.assign(this, { connection, provider, user_id });
         this.data_queue = [];
         this.IP = this.connection['_socket'].remoteAddress;
     }

@@ -1,3 +1,4 @@
+import { ConfigManager } from "./ConfigManager";
 import { runPowershellScript } from "./reusable";
 
 var nodemailer = require('nodemailer');
@@ -14,7 +15,7 @@ export var EmailManager = {
 
     setup_transporter: async () => {
         var auth = JSON.parse(await runPowershellScript(path.join(__dirname, '/../getEmailLogon.ps1')));
-        var config = JSON.parse(fs.readFileSync(path.join(__dirname, '/../emailManagerConfig.json')));
+        var config = await ConfigManager.get('Email-Manager-Config');
         Object.assign(config, {auth});
         EmailManager.transporter = nodemailer.createTransport(config);
     },
