@@ -83,7 +83,7 @@ class OldOpenTickets extends WebsocketProvider_1.WebsocketProvider {
                     return ticket_created <= created_threshold && ticket_modified <= modified_threshold;
                 });
                 resolve(old_tickets);
-            }, (e) => { reject("Failed to retrieve authentication token."); });
+            }, (e) => { reject("Something went wrong: " + e); });
         });
     }
     do_work(data) {

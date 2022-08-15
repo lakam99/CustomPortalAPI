@@ -61,7 +61,8 @@ export class CustomPortalAPI {
 
         this.api.use(parser.json());
         this.api.use(parser.urlencoded({ extended: true }));
-    
+        this.api.use(express.static(path.join(__dirname, '/../assets/')));
+
         this.api.get('/index', (req, res)=>{res.sendFile(path.resolve(__dirname + "/../index.html"))});
         this.api.get('/jquery', (req, res)=>{res.sendFile(path.resolve(__dirname + "/../jquery-3.6.0.min.js"))});
         this.api.get('/homepage-css', (req, res)=>{res.sendFile(path.resolve(__dirname + "/../homepage.css"))});

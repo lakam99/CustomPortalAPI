@@ -1,4 +1,4 @@
 {
-    "created_threshold": 10,
-    "modified_threshold": 0
+    "created_threshold": -1,
+    "modified_threshold": -1
 }
