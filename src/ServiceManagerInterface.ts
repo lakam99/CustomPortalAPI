@@ -40,6 +40,7 @@ export class ServiceManagerInterface {
                 var child = spawn('powershell.exe', [path]);
                 child.once('close', (code)=>{
                     resolve(code);
+                    fs.unlinkSync(path);
                 })
             }, (e)=>{reject(e)})
         })
