@@ -10,6 +10,7 @@ import {CustomAPICall, CUSTOM_API_METHODS} from './CustomAPICall';
 import { HomeUpdateManager } from './HomeUpdateManager';
 import { SocketManager } from './SocketManager';
 import { TemplateManager } from './TemplateManager';
+import { SCSMClientInterface } from './SCSMClientInterface';
 
 export class CustomPortalAPI {
     api = express();
@@ -25,6 +26,7 @@ export class CustomPortalAPI {
     socketManager:SocketManager;
     https_key:any;
     https_cert:any;
+    scsmClient:SCSMClientInterface;
 
     constructor() {
         this.ldap_options = JSON.parse(fs.readFileSync(path.resolve(__dirname + this.ldap_path), 'utf8'));
@@ -80,6 +82,7 @@ export class CustomPortalAPI {
         });
 
         this.homeUpdateManager = new HomeUpdateManager(this);
+        this.scsmClient = new SCSMClientInterface(this);
     }
 
     static setHeaders(res) {

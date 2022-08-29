@@ -55,4 +55,10 @@ export class ServiceManagerInterface {
         })
     }
 
+    async close_ticket(ticket_guid:string) {
+        await this.loaded;
+        var command = `$t=Get-SCSMObject -Id '${ticket_guid}';Set-SCSMObject $t -Property Status -Value 'Closed';`;
+        await this.run_command(command);
+    }
+
 }

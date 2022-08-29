@@ -11,6 +11,7 @@ const WebSockets = require('ws');
 const CustomAPICall_1 = require("./CustomAPICall");
 const HomeUpdateManager_1 = require("./HomeUpdateManager");
 const SocketManager_1 = require("./SocketManager");
+const SCSMClientInterface_1 = require("./SCSMClientInterface");
 class CustomPortalAPI {
     constructor() {
         this.api = express();
@@ -60,6 +61,7 @@ class CustomPortalAPI {
             console.log("Listening at https://%s:%s", host, port);
         });
         this.homeUpdateManager = new HomeUpdateManager_1.HomeUpdateManager(this);
+        this.scsmClient = new SCSMClientInterface_1.SCSMClientInterface(this);
     }
     static setHeaders(res) {
         res.header("Access-Control-Allow-Origin", "*");
